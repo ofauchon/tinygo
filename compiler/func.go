@@ -31,7 +31,7 @@ const (
 
 // funcImplementation picks an appropriate func value implementation for the
 // target.
-func (c *Compiler) funcImplementation() funcValueImplementation {
+func (c *compilerContext) funcImplementation() funcValueImplementation {
 	// Always pick the switch implementation, as it allows the use of blocking
 	// inside a function that is used as a func value.
 	switch c.Scheduler() {
@@ -109,7 +109,7 @@ func (c *Compiler) decodeFuncValue(funcValue llvm.Value, sig *types.Signature) (
 }
 
 // getFuncType returns the type of a func value given a signature.
-func (c *Compiler) getFuncType(typ *types.Signature) llvm.Type {
+func (c *compilerContext) getFuncType(typ *types.Signature) llvm.Type {
 	switch c.funcImplementation() {
 	case funcValueDoubleword:
 		rawPtr := c.getRawFuncType(typ)
@@ -122,7 +122,7 @@ func (c *Compiler) getFuncType(typ *types.Signature) llvm.Type {
 }
 
 // getRawFuncType returns a LLVM function pointer type for a given signature.
-func (c *Compiler) getRawFuncType(typ *types.Signature) llvm.Type {
+func (c *compilerContext) getRawFuncType(typ *types.Signature) llvm.Type {
 	// Get the return type.
 	var returnType llvm.Type
 	switch typ.Results().Len() {
@@ -152,11 +152,11 @@ func (c *Compiler) getRawFuncType(typ *types.Signature) llvm.Type {
 			// The receiver is not an interface, but a i8* type.
 			recv = c.i8ptrType
 		}
-		paramTypes = append(paramTypes, c.expandFormalParamType(recv)...)
+		paramTypes = append(paramTypes, expandFormalParamType(recv)...)
 	}
 	for i := 0; i < typ.Params().Len(); i++ {
 		subType := c.getLLVMType(typ.Params().At(i).Type())
-		paramTypes = append(paramTypes, c.expandFormalParamType(subType)...)
+		paramTypes = append(paramTypes, expandFormalParamType(subType)...)
 	}
 	// All functions take these parameters at the end.
 	paramTypes = append(paramTypes, c.i8ptrType) // context
