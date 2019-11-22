@@ -1512,7 +1512,7 @@ func (c *Compiler) parseExpr(frame *Frame, expr ssa.Value) (llvm.Value, error) {
 		// Check bounds.
 		arrayLen := expr.X.Type().(*types.Array).Len()
 		arrayLenLLVM := llvm.ConstInt(c.uintptrType, uint64(arrayLen), false)
-		c.emitLookupBoundsCheck(frame, arrayLenLLVM, index, expr.Index.Type())
+		frame.createLookupBoundsCheck(arrayLenLLVM, index, expr.Index.Type())
 
 		// Can't load directly from array (as index is non-constant), so have to
 		// do it using an alloca+gep+load.
@@ -1554,7 +1554,7 @@ func (c *Compiler) parseExpr(frame *Frame, expr ssa.Value) (llvm.Value, error) {
 		}
 
 		// Bounds check.
-		c.emitLookupBoundsCheck(frame, buflen, index, expr.Index.Type())
+		frame.createLookupBoundsCheck(buflen, index, expr.Index.Type())
 
 		switch expr.X.Type().Underlying().(type) {
 		case *types.Pointer:
@@ -1580,7 +1580,7 @@ func (c *Compiler) parseExpr(frame *Frame, expr ssa.Value) (llvm.Value, error) {
 
 			// Bounds check.
 			length := c.builder.CreateExtractValue(value, 1, "len")
-			c.emitLookupBoundsCheck(frame, length, index, expr.Index.Type())
+			frame.createLookupBoundsCheck(length, index, expr.Index.Type())
 
 			// Lookup byte
 			buf := c.builder.CreateExtractValue(value, 0, "")
@@ -1641,7 +1641,7 @@ func (c *Compiler) parseExpr(frame *Frame, expr ssa.Value) (llvm.Value, error) {
 		// Bounds checking.
 		lenType := expr.Len.Type().(*types.Basic)
 		capType := expr.Cap.Type().(*types.Basic)
-		c.emitSliceBoundsCheck(frame, maxSize, sliceLen, sliceCap, sliceCap, lenType, capType, capType)
+		frame.createSliceBoundsCheck(maxSize, sliceLen, sliceCap, sliceCap, lenType, capType, capType)
 
 		// Allocate the backing array.
 		sliceCapCast, err := c.parseConvert(expr.Cap.Type(), types.Typ[types.Uintptr], sliceCap, expr.Pos())
@@ -1779,7 +1779,7 @@ func (c *Compiler) parseExpr(frame *Frame, expr ssa.Value) (llvm.Value, error) {
 				low,
 			}
 
-			c.emitSliceBoundsCheck(frame, llvmLen, low, high, max, lowType, highType, maxType)
+			frame.createSliceBoundsCheck(llvmLen, low, high, max, lowType, highType, maxType)
 
 			// Truncate ints bigger than uintptr. This is after the bounds
 			// check so it's safe.
@@ -1819,7 +1819,7 @@ func (c *Compiler) parseExpr(frame *Frame, expr ssa.Value) (llvm.Value, error) {
 				max = oldCap
 			}
 
-			c.emitSliceBoundsCheck(frame, oldCap, low, high, max, lowType, highType, maxType)
+			frame.createSliceBoundsCheck(oldCap, low, high, max, lowType, highType, maxType)
 
 			// Truncate ints bigger than uintptr. This is after the bounds
 			// check so it's safe.
@@ -1862,7 +1862,7 @@ func (c *Compiler) parseExpr(frame *Frame, expr ssa.Value) (llvm.Value, error) {
 				high = oldLen
 			}
 
-			c.emitSliceBoundsCheck(frame, oldLen, low, high, high, lowType, highType, maxType)
+			frame.createSliceBoundsCheck(oldLen, low, high, high, lowType, highType, maxType)
 
 			// Truncate ints bigger than uintptr. This is after the bounds
 			// check so it's safe.
