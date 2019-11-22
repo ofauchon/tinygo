@@ -122,19 +122,19 @@ func (b *builder) createSliceBoundsCheck(capacity, low, high, max llvm.Value, lo
 	b.SetInsertPointAtEnd(nextBlock)
 }
 
-// emitNilCheck checks whether the given pointer is nil, and panics if it is. It
-// has no effect in well-behaved programs, but makes sure no uncaught nil
+// createNilCheck checks whether the given pointer is nil, and panics if it is.
+// It has no effect in well-behaved programs, but makes sure no uncaught nil
 // pointer dereferences exist in valid Go code.
-func (c *Compiler) emitNilCheck(frame *Frame, ptr llvm.Value, blockPrefix string) {
+func (b *builder) createNilCheck(ptr llvm.Value, blockPrefix string) {
 	// Check whether we need to emit this check at all.
 	if !ptr.IsAGlobalValue().IsNil() {
 		return
 	}
 
 	// Check whether this is a nil pointer.
-	faultBlock := c.ctx.AddBasicBlock(frame.fn.LLVMFn, blockPrefix+".nil")
-	nextBlock := c.ctx.AddBasicBlock(frame.fn.LLVMFn, blockPrefix+".next")
-	frame.blockExits[frame.currentBlock] = nextBlock // adjust outgoing block for phi nodes
+	faultBlock := b.ctx.AddBasicBlock(b.fn.LLVMFn, blockPrefix+".nil")
+	nextBlock := b.ctx.AddBasicBlock(b.fn.LLVMFn, blockPrefix+".next")
+	b.blockExits[b.currentBlock] = nextBlock // adjust outgoing block for phi nodes
 
 	// Compare against nil.
 	var isnil llvm.Value
@@ -146,21 +146,21 @@ func (c *Compiler) emitNilCheck(frame *Frame, ptr llvm.Value, blockPrefix string
 		// https://reviews.llvm.org/D60047 for details. Pointer capturing
 		// unfortunately breaks escape analysis, so we use this trick to let the
 		// functionattr pass know that this pointer doesn't really escape.
-		ptr = c.builder.CreateBitCast(ptr, c.i8ptrType, "")
-		isnil = c.createRuntimeCall("isnil", []llvm.Value{ptr}, "")
+		ptr = b.CreateBitCast(ptr, b.i8ptrType, "")
+		isnil = b.createRuntimeCall("isnil", []llvm.Value{ptr}, "")
 	} else {
 		// Do the nil check using a regular icmp. This can happen with function
 		// pointers on AVR, which don't benefit from escape analysis anyway.
 		nilptr := llvm.ConstPointerNull(ptr.Type())
-		isnil = c.builder.CreateICmp(llvm.IntEQ, ptr, nilptr, "")
+		isnil = b.CreateICmp(llvm.IntEQ, ptr, nilptr, "")
 	}
-	c.builder.CreateCondBr(isnil, faultBlock, nextBlock)
+	b.CreateCondBr(isnil, faultBlock, nextBlock)
 
 	// Fail: this is a nil pointer, exit with a panic.
-	c.builder.SetInsertPointAtEnd(faultBlock)
-	c.createRuntimeCall("nilPanic", nil, "")
-	c.builder.CreateUnreachable()
+	b.SetInsertPointAtEnd(faultBlock)
+	b.createRuntimeCall("nilPanic", nil, "")
+	b.CreateUnreachable()
 
 	// Ok: this is a valid pointer.
-	c.builder.SetInsertPointAtEnd(nextBlock)
+	b.SetInsertPointAtEnd(nextBlock)
 }

@@ -388,7 +388,7 @@ func (c *Compiler) Compile(mainPath string) []error {
 		c.mod.NamedFunction("runtime.alloc").AddAttributeAtIndex(0, getAttr(attrName))
 	}
 
-	// See emitNilCheck in asserts.go.
+	// See createNilCheck in asserts.go.
 	c.mod.NamedFunction("runtime.isnil").AddAttributeAtIndex(1, nocapture)
 
 	// This function is necessary for tracking pointers on the stack in a
@@ -1109,7 +1109,7 @@ func (c *Compiler) parseInstr(frame *Frame, instr ssa.Instruction) {
 	case *ssa.Store:
 		llvmAddr := frame.getValue(instr.Addr)
 		llvmVal := frame.getValue(instr.Val)
-		c.emitNilCheck(frame, llvmAddr, "store")
+		frame.createNilCheck(llvmAddr, "store")
 		if c.targetData.TypeAllocSize(llvmVal.Type()) == 0 {
 			// nothing to store
 			return
@@ -1362,7 +1362,7 @@ func (c *Compiler) parseCall(frame *Frame, instr *ssa.CallCommon) (llvm.Value, e
 		// This is a func value, which cannot be called directly. We have to
 		// extract the function pointer and context first from the func value.
 		funcPtr, context := c.decodeFuncValue(value, instr.Value.Type().Underlying().(*types.Signature))
-		c.emitNilCheck(frame, funcPtr, "fpcall")
+		frame.createNilCheck(funcPtr, "fpcall")
 		return c.parseFunctionCall(frame, instr.Args, funcPtr, context, false), nil
 	}
 }
@@ -1494,7 +1494,7 @@ func (c *Compiler) parseExpr(frame *Frame, expr ssa.Value) (llvm.Value, error) {
 		// > For an operand x of type T, the address operation &x generates a
 		// > pointer of type *T to x. [...] If the evaluation of x would cause a
 		// > run-time panic, then the evaluation of &x does too.
-		c.emitNilCheck(frame, val, "gep")
+		frame.createNilCheck(val, "gep")
 		// Do a GEP on the pointer to get the field address.
 		indices := []llvm.Value{
 			llvm.ConstInt(c.ctx.Int32Type(), 0, false),
@@ -1542,7 +1542,7 @@ func (c *Compiler) parseExpr(frame *Frame, expr ssa.Value) (llvm.Value, error) {
 				// > generates a pointer of type *T to x. [...] If the
 				// > evaluation of x would cause a run-time panic, then the
 				// > evaluation of &x does too.
-				c.emitNilCheck(frame, bufptr, "gep")
+				frame.createNilCheck(bufptr, "gep")
 			default:
 				return llvm.Value{}, c.makeError(expr.Pos(), "todo: indexaddr: "+typ.String())
 			}
@@ -2546,7 +2546,7 @@ func (c *Compiler) parseUnOp(frame *Frame, unop *ssa.UnOp) (llvm.Value, error) {
 			}
 			return c.builder.CreateBitCast(fn, c.i8ptrType, ""), nil
 		} else {
-			c.emitNilCheck(frame, x, "deref")
+			frame.createNilCheck(x, "deref")
 			load := c.builder.CreateLoad(x, "")
 			return load, nil
 		}
