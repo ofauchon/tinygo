@@ -18,8 +18,8 @@ import (
 //     func ReadRegister(name string) uintptr
 //
 // The register name must be a constant, for example "sp".
-func (c *Compiler) emitReadRegister(name string, args []ssa.Value) (llvm.Value, error) {
-	fnType := llvm.FunctionType(c.uintptrType, []llvm.Type{}, false)
+func (b *builder) createReadRegister(name string, args []ssa.Value) (llvm.Value, error) {
+	fnType := llvm.FunctionType(b.uintptrType, []llvm.Type{}, false)
 	regname := constant.StringVal(args[0].(*ssa.Const).Value)
 	var asm string
 	switch name {
@@ -31,7 +31,7 @@ func (c *Compiler) emitReadRegister(name string, args []ssa.Value) (llvm.Value, 
 		panic("unknown architecture")
 	}
 	target := llvm.InlineAsm(fnType, asm, "=r", false, false, 0)
-	return c.builder.CreateCall(target, nil, ""), nil
+	return b.CreateCall(target, nil, ""), nil
 }
 
 // This is a compiler builtin, which emits a piece of inline assembly with no
@@ -41,12 +41,12 @@ func (c *Compiler) emitReadRegister(name string, args []ssa.Value) (llvm.Value, 
 //     func Asm(asm string)
 //
 // The provided assembly must be a constant.
-func (c *Compiler) emitAsm(args []ssa.Value) (llvm.Value, error) {
+func (b *builder) createInlineAsm(args []ssa.Value) (llvm.Value, error) {
 	// Magic function: insert inline assembly instead of calling it.
-	fnType := llvm.FunctionType(c.ctx.VoidType(), []llvm.Type{}, false)
+	fnType := llvm.FunctionType(b.ctx.VoidType(), []llvm.Type{}, false)
 	asm := constant.StringVal(args[0].(*ssa.Const).Value)
 	target := llvm.InlineAsm(fnType, asm, "", true, false, 0)
-	return c.builder.CreateCall(target, nil, ""), nil
+	return b.CreateCall(target, nil, ""), nil
 }
 
 // This is a compiler builtin, which allows assembly to be called in a flexible
@@ -63,7 +63,7 @@ func (c *Compiler) emitAsm(args []ssa.Value) (llvm.Value, error) {
 //             "value":  1
 //             "result": &dest,
 //         })
-func (c *Compiler) emitAsmFull(frame *Frame, instr *ssa.CallCommon) (llvm.Value, error) {
+func (b *builder) createInlineAsmFull(instr *ssa.CallCommon) (llvm.Value, error) {
 	asmString := constant.StringVal(instr.Args[0].(*ssa.Const).Value)
 	registers := map[string]llvm.Value{}
 	registerMap := instr.Args[1].(*ssa.MakeMap)
@@ -73,17 +73,17 @@ func (c *Compiler) emitAsmFull(frame *Frame, instr *ssa.CallCommon) (llvm.Value,
 			// ignore
 		case *ssa.MapUpdate:
 			if r.Block() != registerMap.Block() {
-				return llvm.Value{}, c.makeError(instr.Pos(), "register value map must be created in the same basic block")
+				return llvm.Value{}, b.makeError(instr.Pos(), "register value map must be created in the same basic block")
 			}
 			key := constant.StringVal(r.Key.(*ssa.Const).Value)
 			//println("value:", r.Value.(*ssa.MakeInterface).X.String())
-			registers[key] = frame.getValue(r.Value.(*ssa.MakeInterface).X)
+			registers[key] = b.getValue(r.Value.(*ssa.MakeInterface).X)
 		case *ssa.Call:
 			if r.Common() == instr {
 				break
 			}
 		default:
-			return llvm.Value{}, c.makeError(instr.Pos(), "don't know how to handle argument to inline assembly: "+r.String())
+			return llvm.Value{}, b.makeError(instr.Pos(), "don't know how to handle argument to inline assembly: "+r.String())
 		}
 	}
 	// TODO: handle dollar signs in asm string
@@ -98,7 +98,7 @@ func (c *Compiler) emitAsmFull(frame *Frame, instr *ssa.CallCommon) (llvm.Value,
 		name := s[1 : len(s)-1]
 		if _, ok := registers[name]; !ok {
 			if err == nil {
-				err = c.makeError(instr.Pos(), "unknown register name: "+name)
+				err = b.makeError(instr.Pos(), "unknown register name: "+name)
 			}
 			return s
 		}
@@ -112,7 +112,7 @@ func (c *Compiler) emitAsmFull(frame *Frame, instr *ssa.CallCommon) (llvm.Value,
 			case llvm.PointerTypeKind:
 				constraints = append(constraints, "*m")
 			default:
-				err = c.makeError(instr.Pos(), "unknown type in inline assembly for value: "+name)
+				err = b.makeError(instr.Pos(), "unknown type in inline assembly for value: "+name)
 				return s
 			}
 		}
@@ -121,9 +121,9 @@ func (c *Compiler) emitAsmFull(frame *Frame, instr *ssa.CallCommon) (llvm.Value,
 	if err != nil {
 		return llvm.Value{}, err
 	}
-	fnType := llvm.FunctionType(c.ctx.VoidType(), argTypes, false)
+	fnType := llvm.FunctionType(b.ctx.VoidType(), argTypes, false)
 	target := llvm.InlineAsm(fnType, asmString, strings.Join(constraints, ","), true, false, 0)
-	return c.builder.CreateCall(target, args, ""), nil
+	return b.CreateCall(target, args, ""), nil
 }
 
 // This is a compiler builtin which emits an inline SVCall instruction. It can
@@ -137,7 +137,7 @@ func (c *Compiler) emitAsmFull(frame *Frame, instr *ssa.CallCommon) (llvm.Value,
 //
 // The num parameter must be a constant. All other parameters may be any scalar
 // value supported by LLVM inline assembly.
-func (c *Compiler) emitSVCall(frame *Frame, args []ssa.Value) (llvm.Value, error) {
+func (b *builder) emitSVCall(args []ssa.Value) (llvm.Value, error) {
 	num, _ := constant.Uint64Val(args[0].(*ssa.Const).Value)
 	llvmArgs := []llvm.Value{}
 	argTypes := []llvm.Type{}
@@ -150,7 +150,7 @@ func (c *Compiler) emitSVCall(frame *Frame, args []ssa.Value) (llvm.Value, error
 		} else {
 			constraints += ",{r" + strconv.Itoa(i) + "}"
 		}
-		llvmValue := frame.getValue(arg)
+		llvmValue := b.getValue(arg)
 		llvmArgs = append(llvmArgs, llvmValue)
 		argTypes = append(argTypes, llvmValue.Type())
 	}
@@ -158,7 +158,7 @@ func (c *Compiler) emitSVCall(frame *Frame, args []ssa.Value) (llvm.Value, error
 	// clobbered. r0 is used as an output register so doesn't have to be
 	// marked as clobbered.
 	constraints += ",~{r1},~{r2},~{r3}"
-	fnType := llvm.FunctionType(c.uintptrType, argTypes, false)
+	fnType := llvm.FunctionType(b.uintptrType, argTypes, false)
 	target := llvm.InlineAsm(fnType, asm, constraints, true, false, 0)
-	return c.builder.CreateCall(target, llvmArgs, ""), nil
+	return b.CreateCall(target, llvmArgs, ""), nil
 }

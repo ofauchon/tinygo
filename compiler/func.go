@@ -104,22 +104,22 @@ func (b *builder) extractFuncScalar(funcValue llvm.Value) llvm.Value {
 
 // extractFuncContext extracts the context pointer from this function value. It
 // is a cheap operation.
-func (c *Compiler) extractFuncContext(funcValue llvm.Value) llvm.Value {
-	return c.builder.CreateExtractValue(funcValue, 0, "")
+func (b *builder) extractFuncContext(funcValue llvm.Value) llvm.Value {
+	return b.CreateExtractValue(funcValue, 0, "")
 }
 
 // decodeFuncValue extracts the context and the function pointer from this func
 // value. This may be an expensive operation.
-func (c *Compiler) decodeFuncValue(funcValue llvm.Value, sig *types.Signature) (funcPtr, context llvm.Value) {
-	context = c.builder.CreateExtractValue(funcValue, 0, "")
-	switch c.funcImplementation() {
+func (b *builder) decodeFuncValue(funcValue llvm.Value, sig *types.Signature) (funcPtr, context llvm.Value) {
+	context = b.CreateExtractValue(funcValue, 0, "")
+	switch b.funcImplementation() {
 	case funcValueDoubleword:
-		funcPtr = c.builder.CreateExtractValue(funcValue, 1, "")
+		funcPtr = b.CreateExtractValue(funcValue, 1, "")
 	case funcValueSwitch:
-		llvmSig := c.getRawFuncType(sig)
-		sigGlobal := c.getTypeCode(sig)
-		funcPtr = c.createRuntimeCall("getFuncPtr", []llvm.Value{funcValue, sigGlobal}, "")
-		funcPtr = c.builder.CreateIntToPtr(funcPtr, llvmSig, "")
+		llvmSig := b.getRawFuncType(sig)
+		sigGlobal := b.getTypeCode(sig)
+		funcPtr = b.createRuntimeCall("getFuncPtr", []llvm.Value{funcValue, sigGlobal}, "")
+		funcPtr = b.CreateIntToPtr(funcPtr, llvmSig, "")
 	default:
 		panic("unimplemented func value variant")
 	}
