@@ -67,6 +67,10 @@ type compilerContext struct {
 	*compileopts.Config
 	mod              llvm.Module
 	ctx              llvm.Context
+	dibuilder        *llvm.DIBuilder
+	cu               llvm.Metadata
+	difiles          map[string]llvm.Metadata
+	ditypes          map[types.Type]llvm.Metadata
 	machine          llvm.TargetMachine
 	targetData       llvm.TargetData
 	intType          llvm.Type
@@ -80,13 +84,8 @@ type compilerContext struct {
 
 type Compiler struct {
 	compilerContext
-	builder                 llvm.Builder
-	dibuilder               *llvm.DIBuilder
-	cu                      llvm.Metadata
-	difiles                 map[string]llvm.Metadata
-	ditypes                 map[types.Type]llvm.Metadata
-	initFuncs               []llvm.Value
-	interfaceInvokeWrappers []interfaceInvokeWrapper
+	builder   llvm.Builder
+	initFuncs []llvm.Value
 }
 
 type Frame struct {
@@ -121,10 +120,10 @@ type Phi struct {
 func NewCompiler(pkgName string, config *compileopts.Config) (*Compiler, error) {
 	c := &Compiler{
 		compilerContext: compilerContext{
-			Config: config,
+			Config:  config,
+			difiles: make(map[string]llvm.Metadata),
+			ditypes: make(map[types.Type]llvm.Metadata),
 		},
-		difiles: make(map[string]llvm.Metadata),
-		ditypes: make(map[types.Type]llvm.Metadata),
 	}
 
 	target, err := llvm.GetTargetFromTriple(config.Triple())
@@ -336,12 +335,6 @@ func (c *Compiler) Compile(mainPath string) []error {
 		c.parseFunc(frame)
 	}
 
-	// Define the already declared functions that wrap methods for use in
-	// interfaces.
-	for _, state := range c.interfaceInvokeWrappers {
-		c.createInterfaceInvokeWrapper(state)
-	}
-
 	// After all packages are imported, add a synthetic initializer function
 	// that calls the initializer of each package.
 	initFn := c.ir.GetFunction(c.ir.Program.ImportedPackage("runtime").Members["initAll"].(*ssa.Function))
@@ -548,7 +541,7 @@ func isPointer(typ types.Type) bool {
 }
 
 // Get the DWARF type for this Go type.
-func (c *Compiler) getDIType(typ types.Type) llvm.Metadata {
+func (c *compilerContext) getDIType(typ types.Type) llvm.Metadata {
 	if md, ok := c.ditypes[typ]; ok {
 		return md
 	}
@@ -559,7 +552,7 @@ func (c *Compiler) getDIType(typ types.Type) llvm.Metadata {
 
 // createDIType creates a new DWARF type. Don't call this function directly,
 // call getDIType instead.
-func (c *Compiler) createDIType(typ types.Type) llvm.Metadata {
+func (c *compilerContext) createDIType(typ types.Type) llvm.Metadata {
 	llvmType := c.getLLVMType(typ)
 	sizeInBytes := c.targetData.TypeAllocSize(llvmType)
 	switch typ := typ.(type) {
@@ -795,12 +788,17 @@ func (c *Compiler) parseFuncDecl(f *ir.Function) *Frame {
 	return frame
 }
 
-func (c *Compiler) attachDebugInfo(f *ir.Function) llvm.Metadata {
+// attachDebugInfo adds debug info to a function declaration. It returns the
+// DISubprogram metadata node.
+func (c *compilerContext) attachDebugInfo(f *ir.Function) llvm.Metadata {
 	pos := c.ir.Program.Fset.Position(f.Syntax().Pos())
 	return c.attachDebugInfoRaw(f, f.LLVMFn, "", pos.Filename, pos.Line)
 }
 
-func (c *Compiler) attachDebugInfoRaw(f *ir.Function, llvmFn llvm.Value, suffix, filename string, line int) llvm.Metadata {
+// attachDebugInfo adds debug info to a function declaration. It returns the
+// DISubprogram metadata node. This method allows some more control over how
+// debug info is added to the function.
+func (c *compilerContext) attachDebugInfoRaw(f *ir.Function, llvmFn llvm.Value, suffix, filename string, line int) llvm.Metadata {
 	if _, ok := c.difiles[filename]; !ok {
 		dir, file := filepath.Split(filename)
 		if dir != "" {
