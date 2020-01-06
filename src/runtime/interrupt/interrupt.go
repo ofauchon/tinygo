@@ -12,14 +12,3 @@ type Interrupt struct {
 	// some encapsulation.
 	num int
 }
-
-// New is a compiler intrinsic that creates a new Interrupt object. You may call
-// it only once, and must pass constant parameters to it. That means that the
-// interrupt ID must be a Go constant and that the handler must be a simple
-// function: closures are not supported.
-func New(id int, handler func(Interrupt)) Interrupt
-
-type handle struct {
-	handler func(Interrupt)
-	Interrupt
-}
