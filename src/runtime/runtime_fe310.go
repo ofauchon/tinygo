@@ -42,6 +42,10 @@ func main() {
 	// of MTVEC won't be zero.
 	riscv.MTVEC.Set(uintptr(unsafe.Pointer(&handleInterruptASM)))
 
+	// Reset the MIE register and enable external interrupts.
+	// It must be reset here because it not zeroed at startup.
+	riscv.MIE.Set(1 << 11) // bit 11 is for machine external interrupts
+
 	// Enable global interrupts now that they've been set up.
 	riscv.MSTATUS.SetBits(1 << 3) // MIE
 
@@ -68,6 +72,13 @@ func handleInterrupt() {
 			// Disable the timer, to avoid triggering the interrupt right after
 			// this interrupt returns.
 			riscv.MIE.ClearBits(1 << 7) // MTIE bit
+		case 11: // Machine external interrupt
+			// Claim this interrupt.
+			id := sifive.PLIC.CLAIM.Get()
+			// Call the interrupt handler, if any is registered for this ID.
+			callInterruptHandler(id)
+			// Complete this interrupt.
+			sifive.PLIC.CLAIM.Set(id)
 		}
 	} else {
 		// TODO: handle exceptions in a similar was as HardFault is handled on
@@ -151,3 +162,7 @@ func sleepTicks(d timeUnit) {
 		riscv.Asm("wfi")
 	}
 }
+
+// callInterruptHandler is a compiler-generated function that calls the
+// appropriate interrupt handler for the given interrupt ID.
+func callInterruptHandler(id uint32)

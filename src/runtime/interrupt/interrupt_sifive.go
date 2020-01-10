@@ -1,20 +1,13 @@
-// +build cortexm
+// +build sifive
 
 package interrupt
 
-import (
-	"device/arm"
-)
-
-// Register is used to declare an interrupt. You should not normally call this
-// function: it is only for telling the compiler about the mapping between an
-// interrupt number and the interrupt handler name.
-func Register(id int, handlerName string) int
+import "device/sifive"
 
 // Enable enables this interrupt. Right after calling this function, the
 // interrupt may be invoked if it was already pending.
 func (irq Interrupt) Enable() {
-	arm.EnableIRQ(uint32(irq.num))
+	sifive.PLIC.ENABLE[irq.num/32].SetBits(1 << (irq.num % 32))
 }
 
 // SetPriority sets the interrupt priority for this interrupt. A lower number
@@ -24,5 +17,5 @@ func (irq Interrupt) Enable() {
 // Examples: 0xff (lowest priority), 0xc0 (low priority), 0x00 (highest possible
 // priority).
 func (irq Interrupt) SetPriority(priority uint8) {
-	arm.SetPriority(uint32(irq.num), uint32(priority))
+	sifive.PLIC.PRIORITY[irq.num].Set(uint32(priority))
 }
