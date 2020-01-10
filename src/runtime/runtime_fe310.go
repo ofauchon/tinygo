@@ -46,6 +46,7 @@ func main() {
 	riscv.MSTATUS.SetBits(1 << 3) // MIE
 
 	preinit()
+	initPeripherals()
 	initAll()
 	callMain()
 	abort()
@@ -74,12 +75,8 @@ func handleInterrupt() {
 	}
 }
 
-func init() {
-	pric_init()
-	machine.UART0.Configure(machine.UARTConfig{})
-}
-
-func pric_init() {
+// initPeripherals configures periperhals the way the runtime expects them.
+func initPeripherals() {
 	// Make sure the HFROSC is on
 	sifive.PRCI.HFROSCCFG.SetBits(sifive.PRCI_HFROSCCFG_ENABLE)
 
@@ -92,6 +89,9 @@ func pric_init() {
 
 	// Enable the RTC.
 	sifive.RTC.RTCCFG.Set(sifive.RTC_RTCCFG_ENALWAYS)
+
+	// Configure the UART.
+	machine.UART0.Configure(machine.UARTConfig{})
 }
 
 func preinit() {
