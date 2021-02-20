@@ -23,5 +23,5 @@ func getEXTIConfigRegister(pin uint8) *volatile.Register32 {
 
 func enableEXTIConfigRegisters() {
 	// Enable SYSCFG
-	stm32.RCC.APB2ENR.SetBits(stm32.RCC_APB2ENR_SYSCFGEN)
+	//stm32.RCC.APB2ENR.SetBits(stm32.RCC_APB2ENR_SYSCFGEN)
 }

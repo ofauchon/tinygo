@@ -17,6 +17,12 @@ const (
 	led    = machine.LED
 )
 
+const (
+        buttonMode      = machine.PinInputPulldown
+        buttonPinChange = machine.PinRising | machine.PinFalling
+)
+
+
 func main() {
 	var lightLed volatile.Register8
 	lightLed.Set(0)
@@ -24,7 +30,7 @@ func main() {
 	// Configure the LED, defaulting to on (usually setting the pin to low will
 	// turn the LED on).
 	led.Configure(machine.PinConfig{Mode: machine.PinOutput})
-	led.Low()
+	led.High()
 
 	// Make sure the pin is configured as a pullup to avoid floating inputs.
 	// Pullup works for most buttons, as most buttons short to ground when

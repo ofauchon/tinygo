@@ -1,0 +1,10 @@
+{
+  "inherits": ["cortex-m4"],
+  "build-tags": ["stm32wle5", "stm32"],
+  "cflags": [
+    "-Qunused-arguments"
+  ],
+  "extra-files": [
+    "src/device/stm32/stm32wle5.s"
+  ]
+}

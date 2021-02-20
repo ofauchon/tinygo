@@ -2,10 +2,6 @@
 
 package machine
 
-import (
-	"device/stm32"
-)
-
 // GPIO for the stm32 families except the stm32f1xx which uses a simpler but
 //  less flexible mechanism. Extend the +build directive above to exclude other
 //  models in the stm32f1xx series as necessary
@@ -36,6 +32,9 @@ const (
 
 	// for PWM
 	PinModePWMOutput PinMode = 12
+
+	// for Clock Out
+	PinModeMCO PinMode = 13
 )
 
 // Define several bitfields that have different names across chip families but
@@ -105,21 +104,29 @@ func (p Pin) ConfigureAltFunc(config PinConfig, altFunc uint8) {
 		port.PUPDR.ReplaceBits(gpioPullFloating, gpioPullMask, pos)
 		p.SetAltFunc(altFunc)
 
-	// I2C
-	case PinModeI2CSCL:
+		// I2C
+
+		/*
+			case PinModeI2CSCL:
+				port.MODER.ReplaceBits(gpioModeAlternate, gpioModeMask, pos)
+				port.OTYPER.ReplaceBits(stm32.GPIO_OTYPER_OT0_OpenDrain, stm32.GPIO_OTYPER_OT0_Msk, pos/2)
+				port.OSPEEDR.ReplaceBits(gpioOutputSpeedLow, gpioOutputSpeedMask, pos)
+				port.PUPDR.ReplaceBits(gpioPullFloating, gpioPullMask, pos)
+				p.SetAltFunc(altFunc)
+			case PinModeI2CSDA:
+				port.MODER.ReplaceBits(gpioModeAlternate, gpioModeMask, pos)
+				port.OTYPER.ReplaceBits(stm32.GPIO_OTYPER_OT0_OpenDrain, stm32.GPIO_OTYPER_OT0_Msk, pos/2)
+				port.OSPEEDR.ReplaceBits(gpioOutputSpeedLow, gpioOutputSpeedMask, pos)
+				port.PUPDR.ReplaceBits(gpioPullFloating, gpioPullMask, pos)
+				p.SetAltFunc(altFunc)
+		*/
+		// SPI
+	case PinModeMCO:
 		port.MODER.ReplaceBits(gpioModeAlternate, gpioModeMask, pos)
-		port.OTYPER.ReplaceBits(stm32.GPIO_OTYPER_OT0_OpenDrain, stm32.GPIO_OTYPER_OT0_Msk, pos/2)
-		port.OSPEEDR.ReplaceBits(gpioOutputSpeedLow, gpioOutputSpeedMask, pos)
-		port.PUPDR.ReplaceBits(gpioPullFloating, gpioPullMask, pos)
-		p.SetAltFunc(altFunc)
-	case PinModeI2CSDA:
-		port.MODER.ReplaceBits(gpioModeAlternate, gpioModeMask, pos)
-		port.OTYPER.ReplaceBits(stm32.GPIO_OTYPER_OT0_OpenDrain, stm32.GPIO_OTYPER_OT0_Msk, pos/2)
-		port.OSPEEDR.ReplaceBits(gpioOutputSpeedLow, gpioOutputSpeedMask, pos)
+		port.OSPEEDR.ReplaceBits(gpioOutputSpeedHigh, gpioOutputSpeedMask, pos)
 		port.PUPDR.ReplaceBits(gpioPullFloating, gpioPullMask, pos)
 		p.SetAltFunc(altFunc)
 
-	// SPI
 	case PinModeSPICLK:
 		port.MODER.ReplaceBits(gpioModeAlternate, gpioModeMask, pos)
 		port.OSPEEDR.ReplaceBits(gpioOutputSpeedHigh, gpioOutputSpeedMask, pos)
