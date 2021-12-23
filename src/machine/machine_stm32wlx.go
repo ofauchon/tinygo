@@ -411,6 +411,14 @@ func initRNG() {
 	stm32.RNG.CR.SetBits(stm32.RNG_CR_RNGEN)
 }
 
+// Prepare for Independent Watchdog usage
+func initIWDG() {
+	stm32.RCC.CSR.SetBits(stm32.RCC_CSR_LSION)
+	for !stm32.RCC.CSR.HasBits(stm32.RCC_CSR_LSIRDY) {
+
+	}
+}
+
 //----------
 
 type arrtype = uint32
