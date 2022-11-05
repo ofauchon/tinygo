@@ -6,11 +6,13 @@ package runtime
 import (
 	"device/stm32"
 	"machine"
+	"machine/usb/cdc"
 )
 
 func init() {
 	initCLK()
 
+	cdc.EnableUSBCDC()
 	machine.InitSerial()
 
 	initTickTimer(&machine.TIM4)
@@ -49,17 +51,13 @@ func initCLK() {
 	for !stm32.RCC.CR.HasBits(stm32.RCC_CR_HSIRDY) {
 	}
 
-	stm32.RCC.CFGR.SetBits(stm32.RCC_CFGR_PLLSRC)                                   // set PLL source to HSE
-	stm32.RCC.CFGR.SetBits(stm32.RCC_CFGR_PLLMUL_Mul9 << stm32.RCC_CFGR_PLLMUL_Pos) // multiply by 9
-	stm32.RCC.CR.SetBits(stm32.RCC_CR_PLLON)                                        // enable the PLL
+	stm32.RCC.CFGR.SetBits(stm32.RCC_CFGR_PLLSRC)                                             // set PLL source to HSE
+	stm32.RCC.CFGR.ReplaceBits(stm32.RCC_CFGR_PLLMUL_Mul9, 0b1111, stm32.RCC_CFGR_PLLMUL_Pos) // multiply by 9
 
-	// wait for the PLLRDY flag
-	for !stm32.RCC.CR.HasBits(stm32.RCC_CR_PLLRDY) {
+	stm32.RCC.CR.SetBits(stm32.RCC_CR_PLLON)         // enable the PLL
+	for !stm32.RCC.CR.HasBits(stm32.RCC_CR_PLLRDY) { // Wait PLL Ready
 	}
-
-	stm32.RCC.CFGR.SetBits(stm32.RCC_CFGR_SW_PLL) // set clock source to pll
-
-	// wait for PLL to be CLK
-	for !stm32.RCC.CFGR.HasBits(stm32.RCC_CFGR_SWS_PLL << stm32.RCC_CFGR_SWS_Pos) {
+	stm32.RCC.CFGR.SetBits(stm32.RCC_CFGR_SW_PLL)                                   // Switch clock source to pll
+	for !stm32.RCC.CFGR.HasBits(stm32.RCC_CFGR_SWS_PLL << stm32.RCC_CFGR_SWS_Pos) { // Wait PLL Activated
 	}
 }

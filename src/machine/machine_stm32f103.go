@@ -6,6 +6,7 @@ package machine
 // Peripheral abstraction layer for the stm32.
 
 import (
+	"device/arm"
 	"device/stm32"
 	"runtime/interrupt"
 	"runtime/volatile"
@@ -731,3 +732,16 @@ const (
 	ARR_MAX = 0x10000
 	PSC_MAX = 0x10000
 )
+
+// EnterBootloader should perform a system reset in preparation
+// to switch to the bootloader to flash new firmware.
+// No idea yet if it's available for STM32F1x
+func EnterBootloader() {
+	arm.DisableInterrupts()
+
+	// Perform magic reset into bootloader, as mentioned in
+	// https://github.com/arduino/ArduinoCore-samd/issues/197
+	//*(*uint32)(unsafe.Pointer(uintptr(0x20000000 + HSRAM_SIZE - 4))) = resetMagicValue
+
+	arm.SystemReset()
+}

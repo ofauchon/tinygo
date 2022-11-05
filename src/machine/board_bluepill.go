@@ -109,3 +109,14 @@ const (
 	I2C0_SDA_PIN = PB7
 	I2C0_SCL_PIN = PB6
 )
+
+// USB CDC identifiers
+const (
+	usb_STRING_PRODUCT      = "ST STM32F103"
+	usb_STRING_MANUFACTURER = "ST Microelectronics"
+)
+
+var (
+	usb_VID uint16 = 0x2341
+	usb_PID uint16 = 0x804e
+)

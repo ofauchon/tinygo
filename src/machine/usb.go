@@ -1,5 +1,5 @@
-//go:build sam || nrf52840 || rp2040
-// +build sam nrf52840 rp2040
+//go:build sam || nrf52840 || rp2040 || stm32f103
+// +build sam nrf52840 rp2040 stm32f103
 
 package machine
 
