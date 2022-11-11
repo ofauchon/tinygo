@@ -6,16 +6,19 @@ package runtime
 import (
 	"device/stm32"
 	"machine"
-	"machine/usb/cdc"
+	//"machine/usb/cdc"
 )
 
 func init() {
 	initCLK()
 
-	cdc.EnableUSBCDC()
 	machine.InitSerial()
-
 	initTickTimer(&machine.TIM4)
+
+	//cdc.EnableUSBCDC()
+
+	// This line is required to initialize the USB handler
+	machine.USBDev.Configure(machine.UARTConfig{})
 }
 
 func putchar(c byte) {
