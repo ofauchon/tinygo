@@ -11,6 +11,8 @@ import (
 // https://www.onlinemusictools.com/kb/
 
 func main() {
+
+	println("Hello")
 	led := machine.LED
 	led.Configure(machine.PinConfig{Mode: machine.PinOutput})
 

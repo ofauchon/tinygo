@@ -7,10 +7,14 @@ import (
 )
 
 func main() {
+	println("1")
 	button := machine.BUTTON
 	button.Configure(machine.PinConfig{Mode: machine.PinInputPullup})
 
+	println("2")
 	mouse := mouse.New()
+
+	println("3")
 
 	for {
 		if !button.Get() {
@@ -31,7 +35,11 @@ func main() {
 				}
 			}
 
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(1 * time.Second)
+			println("X")
 		}
+			time.Sleep(1 * time.Second)
+			println("X")
 	}
+
 }
