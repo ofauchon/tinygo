@@ -9,7 +9,7 @@ import (
 
 var (
 	validBuildModeOptions     = []string{"default", "c-shared", "wasi-legacy"}
-	validGCOptions            = []string{"none", "leaking", "conservative", "custom", "precise"}
+	validGCOptions            = []string{"none", "leaking", "conservative", "custom", "precise", "boehm"}
 	validSchedulerOptions     = []string{"none", "tasks", "asyncify"}
 	validSerialOptions        = []string{"none", "uart", "usb", "rtt"}
 	validPrintSizeOptions     = []string{"none", "short", "full", "html"}

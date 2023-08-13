@@ -247,7 +247,6 @@ func defaultTarget(options *Options) (*TargetSpec, error) {
 		GOOS:             options.GOOS,
 		GOARCH:           options.GOARCH,
 		BuildTags:        []string{options.GOOS, options.GOARCH},
-		GC:               "precise",
 		Scheduler:        "tasks",
 		Linker:           "cc",
 		DefaultStackSize: 1024 * 64, // 64kB
@@ -366,6 +365,7 @@ func defaultTarget(options *Options) (*TargetSpec, error) {
 	llvmvendor := "unknown"
 	switch options.GOOS {
 	case "darwin":
+		spec.GC = "precise"
 		platformVersion := "10.12.0"
 		if options.GOARCH == "arm64" {
 			platformVersion = "11.0.0" // first macosx platform with arm64 support
@@ -388,6 +388,7 @@ func defaultTarget(options *Options) (*TargetSpec, error) {
 			"src/runtime/runtime_unix.c",
 			"src/runtime/signal.c")
 	case "linux":
+		spec.GC = "boehm"
 		spec.Linker = "ld.lld"
 		spec.RTLib = "compiler-rt"
 		spec.Libc = "musl"
@@ -411,6 +412,7 @@ func defaultTarget(options *Options) (*TargetSpec, error) {
 			"src/runtime/runtime_unix.c",
 			"src/runtime/signal.c")
 	case "windows":
+		spec.GC = "precise"
 		spec.Linker = "ld.lld"
 		spec.Libc = "mingw-w64"
 		// Note: using a medium code model, low image base and no ASLR
