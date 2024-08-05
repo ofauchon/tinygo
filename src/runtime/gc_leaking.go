@@ -11,6 +11,8 @@ import (
 	"unsafe"
 )
 
+const needsStaticHeap = true
+
 // Ever-incrementing pointer: no memory is freed.
 var heapptr uintptr
 
