@@ -1,8 +1,13 @@
-//go:build (gc.conservative || gc.precise || gc.boehm) && !tinygo.wasm
+//go:build (gc.conservative || gc.precise || gc.boehm) && !tinygo.wasm && !scheduler.threads
 
 package runtime
 
 import "internal/task"
+
+func gcMarkReachable() {
+	markStack()
+	findGlobals(markRoots)
+}
 
 // markStack marks all root pointers found on the stack.
 //
@@ -35,4 +40,8 @@ func scanstack(sp uintptr) {
 		// This is a goroutine stack.
 		markCurrentGoroutineStack(sp)
 	}
+}
+
+func gcResumeWorld() {
+	// Nothing to do here (single threaded).
 }

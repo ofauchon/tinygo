@@ -28,6 +28,10 @@ func GC() {
 	// Unimplemented.
 }
 
+func markRoots(start, end uintptr) {
+	runtimePanic("unreachable: markRoots")
+}
+
 func SetFinalizer(obj interface{}, finalizer interface{}) {
 	// Unimplemented.
 }

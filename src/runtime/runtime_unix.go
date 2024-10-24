@@ -73,6 +73,7 @@ type timespec struct {
 	tv_nsec int64 // unsigned 64-bit integer on all time64 platforms
 }
 
+// Highest address of the stack of the main thread.
 var stackTop uintptr
 
 // Entry point for Go. Initialize all packages and call main.main().

@@ -467,8 +467,7 @@ func runGC() (freeBytes uintptr) {
 	}
 
 	// Mark phase: mark all reachable objects, recursively.
-	markStack()
-	findGlobals(markRoots)
+	gcMarkReachable()
 
 	if baremetal && hasScheduler {
 		// Channel operations in interrupts may move task pointers around while we are marking.
@@ -501,6 +500,10 @@ func runGC() (freeBytes uintptr) {
 	} else {
 		finishMark()
 	}
+
+	// If we're using threads, resume all other threads before starting the
+	// sweep.
+	gcResumeWorld()
 
 	// Sweep phase: free all non-marked objects and unmark marked objects for
 	// the next collection cycle.

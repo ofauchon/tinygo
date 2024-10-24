@@ -8,6 +8,11 @@ import (
 	"unsafe"
 )
 
+func gcMarkReachable() {
+	markStack()
+	findGlobals(markRoots)
+}
+
 //go:extern runtime.stackChainStart
 var stackChainStart *stackChainObject
 
@@ -59,4 +64,8 @@ func trackPointer(ptr, alloca unsafe.Pointer)
 // This is called from internal/task when switching goroutines.
 func swapStackChain(dst **stackChainObject) {
 	*dst, stackChainStart = stackChainStart, *dst
+}
+
+func gcResumeWorld() {
+	// Nothing to do here (single threaded).
 }

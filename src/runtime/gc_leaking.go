@@ -73,6 +73,10 @@ func free(ptr unsafe.Pointer) {
 	// Memory is never freed.
 }
 
+func markRoots(start, end uintptr) {
+	runtimePanic("unreachable: markRoots")
+}
+
 // ReadMemStats populates m with memory statistics.
 //
 // The returned memory statistics are up to date as of the

@@ -42,7 +42,8 @@ var BoehmGC = Library{
 			// Assertions can be enabled while debugging GC issues.
 			//"-DGC_ASSERTIONS",
 
-			// Threading is not yet supported, so these are disabled.
+			// We use our own way of dealing with threads (that is a bit hacky).
+			// See src/runtime/gc_boehm.go.
 			//"-DGC_THREADS",
 			//"-DTHREAD_LOCAL_ALLOC",
 
