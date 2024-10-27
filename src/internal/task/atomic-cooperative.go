@@ -1,3 +1,5 @@
+//go:build !scheduler.threads
+
 package task
 
 // Atomics implementation for cooperative systems. The atomic types here aren't

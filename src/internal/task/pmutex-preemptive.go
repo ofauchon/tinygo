@@ -1,4 +1,4 @@
-//go:build !scheduler.threads
+//go:build scheduler.threads
 
 package task
 
@@ -8,11 +8,4 @@ package task
 // It is mainly useful for short operations that need a lock when threading may
 // be involved, but which do not need a lock with a purely cooperative
 // scheduler.
-type PMutex struct {
-}
-
-func (m *PMutex) Lock() {
-}
-
-func (m *PMutex) Unlock() {
-}
+type PMutex = Mutex

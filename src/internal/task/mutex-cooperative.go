@@ -1,3 +1,5 @@
+//go:build !scheduler.threads
+
 package task
 
 type Mutex struct {
