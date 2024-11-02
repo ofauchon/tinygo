@@ -32,7 +32,6 @@ var (
 	runqueue           task.Queue
 	sleepQueue         *task.Task
 	sleepQueueBaseTime timeUnit
-	timerQueue         *timerNode
 )
 
 // deadlock is called when a goroutine cannot proceed any more, but is in theory
@@ -100,36 +99,15 @@ func addSleepTask(t *task.Task, duration timeUnit) {
 // sleepQueue.
 func addTimer(tim *timerNode) {
 	mask := interrupt.Disable()
-
-	// Add to timer queue.
-	q := &timerQueue
-	for ; *q != nil; q = &(*q).next {
-		if tim.whenTicks() < (*q).whenTicks() {
-			// this will finish earlier than the next - insert here
-			break
-		}
-	}
-	tim.next = *q
-	*q = tim
+	timerQueueAdd(tim)
 	interrupt.Restore(mask)
 }
 
 // removeTimer is the implementation of time.stopTimer. It removes a timer from
 // the timer queue, returning true if the timer is present in the timer queue.
 func removeTimer(tim *timer) bool {
-	removedTimer := false
 	mask := interrupt.Disable()
-	for t := &timerQueue; *t != nil; t = &(*t).next {
-		if (*t).timer == tim {
-			scheduleLog("removed timer")
-			*t = (*t).next
-			removedTimer = true
-			break
-		}
-	}
-	if !removedTimer {
-		scheduleLog("did not remove timer")
-	}
+	removedTimer := timerQueueRemove(tim)
 	interrupt.Restore(mask)
 	return removedTimer
 }
