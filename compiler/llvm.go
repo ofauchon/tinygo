@@ -452,6 +452,21 @@ func (b *builder) readStackPointer() llvm.Value {
 	return b.CreateCall(stacksave.GlobalValueType(), stacksave, nil, "")
 }
 
+// writeStackPointer emits a LLVM intrinsic call that updates the current stack
+// pointer.
+func (b *builder) writeStackPointer(sp llvm.Value) {
+	name := "llvm.stackrestore.p0"
+	if llvmutil.Version() < 18 {
+		name = "llvm.stackrestore" // backwards compatibility with LLVM 17 and below
+	}
+	stackrestore := b.mod.NamedFunction(name)
+	if stackrestore.IsNil() {
+		fnType := llvm.FunctionType(b.ctx.VoidType(), []llvm.Type{b.dataPtrType}, false)
+		stackrestore = llvm.AddFunction(b.mod, name, fnType)
+	}
+	b.CreateCall(stackrestore.GlobalValueType(), stackrestore, []llvm.Value{sp}, "")
+}
+
 // createZExtOrTrunc lets the input value fit in the output type bits, by zero
 // extending or truncating the integer.
 func (b *builder) createZExtOrTrunc(value llvm.Value, t llvm.Type) llvm.Value {

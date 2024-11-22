@@ -208,6 +208,12 @@ func (c *compilerContext) getFunction(fn *ssa.Function) (llvm.Type, llvm.Value) 
 			// > circumstances, and should not be exposed to source languages.
 			llvmutil.AppendToGlobal(c.mod, "llvm.compiler.used", llvmFn)
 		}
+	case "GetModuleHandleExA", "GetProcAddress", "GetSystemInfo", "GetSystemTimeAsFileTime", "LoadLibraryExW", "QueryUnbiasedInterruptTime", "SetEnvironmentVariableA", "Sleep", "VirtualAlloc":
+		// On Windows we need to use a special calling convention for some
+		// external calls.
+		if c.GOOS == "windows" && c.GOARCH == "386" {
+			llvmFn.SetFunctionCallConv(llvm.X86StdcallCallConv)
+		}
 	}
 
 	// External/exported functions may not retain pointer values.

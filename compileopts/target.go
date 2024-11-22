@@ -433,14 +433,20 @@ func defaultTarget(options *Options) (*TargetSpec, error) {
 		spec.Scheduler = "tasks"
 		spec.Linker = "ld.lld"
 		spec.Libc = "mingw-w64"
-		// Note: using a medium code model, low image base and no ASLR
-		// because Go doesn't really need those features. ASLR patches
-		// around issues for unsafe languages like C/C++ that are not
-		// normally present in Go (without explicitly opting in).
-		// For more discussion:
-		// https://groups.google.com/g/Golang-nuts/c/Jd9tlNc6jUE/m/Zo-7zIP_m3MJ?pli=1
 		switch options.GOARCH {
+		case "386":
+			spec.LDFlags = append(spec.LDFlags,
+				"-m", "i386pe",
+			)
+			// __udivdi3 is not present in ucrt it seems.
+			spec.RTLib = "compiler-rt"
 		case "amd64":
+			// Note: using a medium code model, low image base and no ASLR
+			// because Go doesn't really need those features. ASLR patches
+			// around issues for unsafe languages like C/C++ that are not
+			// normally present in Go (without explicitly opting in).
+			// For more discussion:
+			// https://groups.google.com/g/Golang-nuts/c/Jd9tlNc6jUE/m/Zo-7zIP_m3MJ?pli=1
 			spec.LDFlags = append(spec.LDFlags,
 				"-m", "i386pep",
 				"--image-base", "0x400000",

@@ -92,7 +92,7 @@ jobs:
       - name: make gen-device
         run: make -j3 gen-device
       - name: Test TinyGo
-        run: make test GOTESTFLAGS="-short"
+        run: make test GOTESTFLAGS="-only-current-os"
       - name: Build TinyGo release tarball
         run: make release -j3
       - name: Test stdlib packages

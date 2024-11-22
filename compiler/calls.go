@@ -76,7 +76,15 @@ func (b *builder) createCall(fnType llvm.Type, fn llvm.Value, args []llvm.Value,
 		fragments := b.expandFormalParam(arg)
 		expanded = append(expanded, fragments...)
 	}
-	return b.CreateCall(fnType, fn, expanded, name)
+	call := b.CreateCall(fnType, fn, expanded, name)
+	if !fn.IsAFunction().IsNil() {
+		if cc := fn.FunctionCallConv(); cc != llvm.CCallConv {
+			// Set a different calling convention if needed.
+			// This is needed for GetModuleHandleExA on Windows, for example.
+			call.SetInstructionCallConv(cc)
+		}
+	}
+	return call
 }
 
 // createInvoke is like createCall but continues execution at the landing pad if

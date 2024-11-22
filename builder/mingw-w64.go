@@ -93,6 +93,9 @@ func makeMinGWExtraLibs(tmpdir, goarch string) []*compileJob {
 				defpath := inpath
 				var archDef, emulation string
 				switch goarch {
+				case "386":
+					archDef = "-DDEF_I386"
+					emulation = "i386pe"
 				case "amd64":
 					archDef = "-DDEF_X64"
 					emulation = "i386pep"

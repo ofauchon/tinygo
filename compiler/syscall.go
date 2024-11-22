@@ -268,6 +268,8 @@ func (b *builder) createSyscall(call *ssa.CallCommon) (llvm.Value, error) {
 		// The signature looks like this:
 		//   func Syscall(trap, nargs, a1, a2, a3 uintptr) (r1, r2 uintptr, err Errno)
 
+		isI386 := strings.HasPrefix(b.Triple, "i386-")
+
 		// Prepare input values.
 		var paramTypes []llvm.Type
 		var params []llvm.Value
@@ -285,11 +287,17 @@ func (b *builder) createSyscall(call *ssa.CallCommon) (llvm.Value, error) {
 		if setLastError.IsNil() {
 			llvmType := llvm.FunctionType(b.ctx.VoidType(), []llvm.Type{b.ctx.Int32Type()}, false)
 			setLastError = llvm.AddFunction(b.mod, "SetLastError", llvmType)
+			if isI386 {
+				setLastError.SetFunctionCallConv(llvm.X86StdcallCallConv)
+			}
 		}
 		getLastError := b.mod.NamedFunction("GetLastError")
 		if getLastError.IsNil() {
 			llvmType := llvm.FunctionType(b.ctx.Int32Type(), nil, false)
 			getLastError = llvm.AddFunction(b.mod, "GetLastError", llvmType)
+			if isI386 {
+				getLastError.SetFunctionCallConv(llvm.X86StdcallCallConv)
+			}
 		}
 
 		// Now do the actual call. Pseudocode:
@@ -300,9 +308,24 @@ func (b *builder) createSyscall(call *ssa.CallCommon) (llvm.Value, error) {
 		// Note that SetLastError/GetLastError could be replaced with direct
 		// access to the thread control block, which is probably smaller and
 		// faster. The Go runtime does this in assembly.
-		b.CreateCall(setLastError.GlobalValueType(), setLastError, []llvm.Value{llvm.ConstNull(b.ctx.Int32Type())}, "")
+		// On windows/386, we also need to save/restore the stack pointer. I'm
+		// not entirely sure why this is needed, but without it these calls
+		// change the stack pointer leading to a crash soon after.
+		setLastErrorCall := b.CreateCall(setLastError.GlobalValueType(), setLastError, []llvm.Value{llvm.ConstNull(b.ctx.Int32Type())}, "")
+		var sp llvm.Value
+		if isI386 {
+			setLastErrorCall.SetInstructionCallConv(llvm.X86StdcallCallConv)
+			sp = b.readStackPointer()
+		}
 		syscallResult := b.CreateCall(llvmType, fnPtr, params, "")
+		if isI386 {
+			syscallResult.SetInstructionCallConv(llvm.X86StdcallCallConv)
+			b.writeStackPointer(sp)
+		}
 		errResult := b.CreateCall(getLastError.GlobalValueType(), getLastError, nil, "err")
+		if isI386 {
+			errResult.SetInstructionCallConv(llvm.X86StdcallCallConv)
+		}
 		if b.uintptrType != b.ctx.Int32Type() {
 			errResult = b.CreateZExt(errResult, b.uintptrType, "err.uintptr")
 		}
