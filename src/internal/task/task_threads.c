@@ -6,6 +6,7 @@
 #include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <unistd.h>
 
 // BDWGC also uses SIGRTMIN+6 on Linux, which seems like a reasonable choice.
 #ifdef __linux__
@@ -29,7 +30,7 @@ struct state_pass {
 void tinygo_task_gc_pause(int sig);
 
 // Initialize the main thread.
-void tinygo_task_init(void *mainTask, pthread_t *thread, void *context) {
+void tinygo_task_init(void *mainTask, pthread_t *thread, int *numCPU, void *context) {
     // Make sure the current task pointer is set correctly for the main
     // goroutine as well.
     current_task = mainTask;
@@ -43,6 +44,14 @@ void tinygo_task_init(void *mainTask, pthread_t *thread, void *context) {
     act.sa_flags = SA_SIGINFO;
     act.sa_handler = &tinygo_task_gc_pause;
     sigaction(taskPauseSignal, &act, NULL);
+
+    // Obtain the number of CPUs available on program start (for NumCPU).
+    int num = sysconf(_SC_NPROCESSORS_ONLN);
+    if (num <= 0) {
+        // Fallback in case there is an error.
+        num = 1;
+    }
+    *numCPU = num;
 }
 
 void tinygo_task_exited(void*);

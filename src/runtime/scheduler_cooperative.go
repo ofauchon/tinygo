@@ -60,6 +60,11 @@ func Gosched() {
 	task.Pause()
 }
 
+// NumCPU returns the number of logical CPUs usable by the current process.
+func NumCPU() int {
+	return 1
+}
+
 // Add this task to the sleep queue, assuming its state is set to sleeping.
 func addSleepTask(t *task.Task, duration timeUnit) {
 	if schedulerDebug {

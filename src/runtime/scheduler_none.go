@@ -44,6 +44,11 @@ func Gosched() {
 	// There are no other goroutines, so there's nothing to schedule.
 }
 
+// NumCPU returns the number of logical CPUs usable by the current process.
+func NumCPU() int {
+	return 1
+}
+
 func addTimer(tim *timerNode) {
 	runtimePanic("timers not supported without a scheduler")
 }

@@ -22,7 +22,7 @@ import (
 // builder.Library struct but that's hard to do since we want to know the
 // library path in advance in several places).
 var libVersions = map[string]int{
-	"musl": 2,
+	"musl": 3,
 }
 
 // Config keeps all configuration affecting the build in a single struct.

@@ -124,6 +124,7 @@ var libMusl = Library{
 	librarySources: func(target string) ([]string, error) {
 		arch := compileopts.MuslArchitecture(target)
 		globs := []string{
+			"conf/*.c",
 			"ctype/*.c",
 			"env/*.c",
 			"errno/*.c",

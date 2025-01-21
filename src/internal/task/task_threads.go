@@ -38,6 +38,8 @@ type state struct {
 // Goroutine counter, starting at 0 for the main goroutine.
 var goroutineID uintptr
 
+var numCPU int32
+
 var mainTask Task
 
 // Queue of tasks (see QueueNext) that currently exist in the program.
@@ -53,7 +55,7 @@ func OnSystemStack() bool {
 // startup, before starting any other goroutines.
 func Init(sp uintptr) {
 	mainTask.state.stackTop = sp
-	tinygo_task_init(&mainTask, &mainTask.state.thread)
+	tinygo_task_init(&mainTask, &mainTask.state.thread, &numCPU)
 }
 
 // Return the task struct for the current thread.
@@ -259,7 +261,7 @@ func runtimePanic(msg string)
 // that the 't' parameter won't escape (because it will).
 //
 //go:linkname tinygo_task_init tinygo_task_init
-func tinygo_task_init(t *Task, thread *threadID)
+func tinygo_task_init(t *Task, thread *threadID, numCPU *int32)
 
 // Here same as for tinygo_task_init.
 //
@@ -273,3 +275,7 @@ func tinygo_task_send_gc_signal(threadID)
 
 //export tinygo_task_current
 func tinygo_task_current() unsafe.Pointer
+
+func NumCPU() int {
+	return int(numCPU)
+}

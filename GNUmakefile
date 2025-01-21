@@ -972,6 +972,7 @@ endif
 	@cp -rp lib/musl/crt/crt1.c          build/release/tinygo/lib/musl/crt
 	@cp -rp lib/musl/COPYRIGHT           build/release/tinygo/lib/musl
 	@cp -rp lib/musl/include             build/release/tinygo/lib/musl
+	@cp -rp lib/musl/src/conf            build/release/tinygo/lib/musl/src
 	@cp -rp lib/musl/src/ctype           build/release/tinygo/lib/musl/src
 	@cp -rp lib/musl/src/env             build/release/tinygo/lib/musl/src
 	@cp -rp lib/musl/src/errno           build/release/tinygo/lib/musl/src

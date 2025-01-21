@@ -50,6 +50,11 @@ func Gosched() {
 	// operation, so is probably best not to use.
 }
 
+// NumCPU returns the number of logical CPUs usable by the current process.
+func NumCPU() int {
+	return task.NumCPU()
+}
+
 // Separate goroutine (thread) that runs timer callbacks when they expire.
 func timerRunner() {
 	for {
