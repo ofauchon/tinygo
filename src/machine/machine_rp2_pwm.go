@@ -1,4 +1,4 @@
-//go:build rp2040
+//go:build rp2040 || rp2350
 
 package machine
 
@@ -15,7 +15,7 @@ var (
 )
 
 const (
-	maxPWMPins = 29
+	maxPWMPins = _NUMBANK0_GPIOS - 1
 )
 
 // pwmGroup is one PWM peripheral, which consists of a counter and two output
@@ -146,12 +146,13 @@ func (p *pwmGroup) Counter() uint32 {
 
 // Period returns the used PWM period in nanoseconds.
 func (p *pwmGroup) Period() uint64 {
-	periodPerCycle := cpuPeriod()
+	freq := CPUFrequency()
 	top := p.getWrap()
 	phc := p.getPhaseCorrect()
 	Int, frac := p.getClockDiv()
-	// Line below can overflow if operations done without care.
-	return (16*uint64(Int) + uint64(frac)) * uint64((top+1)*(phc+1)*periodPerCycle) / 16 // cycles = (TOP+1) * (CSRPHCorrect + 1) * (DIV_INT + DIV_FRAC/16)
+	// Lines below can overflow if operations done without care.
+	term2 := 16 * uint64((top+1)*(phc+1)) * 1e9 / uint64(freq) // 1e9/freq == CPU period in nanoseconds.
+	return (uint64(Int) + uint64(frac)) * term2 / 16           // cycles = (TOP+1) * (CSRPHCorrect + 1) * (DIV_INT + DIV_FRAC/16)
 }
 
 // SetInverting sets whether to invert the output of this channel.
@@ -279,9 +280,9 @@ func (pwm *pwmGroup) setPeriod(period uint64) error {
 	//  DIV_INT + DIV_FRAC/16 = cycles / ( (TOP+1) * (CSRPHCorrect+1) )  // DIV_FRAC/16 is always 0 in this equation
 	// where cycles must be converted to time:
 	//  target_period = cycles * period_per_cycle ==> cycles = target_period/period_per_cycle
-	periodPerCycle := uint64(cpuPeriod())
+	freq := uint64(CPUFrequency())
 	phc := uint64(pwm.getPhaseCorrect())
-	rhs := 16 * period / ((1 + phc) * periodPerCycle * (1 + topStart)) // right-hand-side of equation, scaled so frac is not divided
+	rhs := 16e9 * period / ((1 + phc) * freq * (1 + topStart)) // right-hand-side of equation, scaled so frac is not divided
 	whole := rhs / 16
 	frac := rhs % 16
 	switch {
@@ -296,7 +297,7 @@ func (pwm *pwmGroup) setPeriod(period uint64) error {
 
 	// Step 2 is acquiring a better top value. Clearing the equation:
 	// TOP =  cycles / ( (DIVINT+DIVFRAC/16) * (CSRPHCorrect+1) ) - 1
-	top := 16*period/((16*whole+frac)*periodPerCycle*(1+phc)) - 1
+	top := 16e9*period/((16*whole+frac)*freq*(1+phc)) - 1
 	if top > maxTop {
 		top = maxTop
 	}
@@ -400,6 +401,9 @@ func (pwm *pwmGroup) getClockDiv() (Int, frac uint8) {
 // pwmGPIOToSlice Determine the PWM channel that is attached to the specified GPIO.
 // gpio must be less than 30. Returns the PWM slice number that controls the specified GPIO.
 func pwmGPIOToSlice(gpio Pin) (slicenum uint8) {
+	if is48Pin && gpio >= 32 {
+		return uint8(8 + ((gpio-32)/2)%4)
+	}
 	return (uint8(gpio) >> 1) & 7
 }
 

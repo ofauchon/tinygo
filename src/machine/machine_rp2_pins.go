@@ -1,4 +1,4 @@
-//go:build rp2040 || rp2350 || ae_rp2040 || badger2040 || challenger_rp2040 || feather_rp2040 || gopher_badge || kb2040 || macropad_rp2040 || nano_rp2040 || pico || qtpy_rp2040 || thingplus_rp2040 || thumby || tufty2040 || waveshare_rp2040_zero || xiao_rp2040
+//go:build rp2040 || rp2350 || gopher_badge
 
 package machine
 
@@ -34,10 +34,4 @@ const (
 	GPIO27 Pin = 27 // peripherals: PWM5 channel B
 	GPIO28 Pin = 28 // peripherals: PWM6 channel A
 	GPIO29 Pin = 29 // peripherals: PWM6 channel B
-
-	// Analog pins
-	ADC0 Pin = GPIO26
-	ADC1 Pin = GPIO27
-	ADC2 Pin = GPIO28
-	ADC3 Pin = GPIO29
 )

@@ -33,6 +33,16 @@ const (
 		rp.PADS_BANK0_GPIO0_ISO_Msk
 )
 
+// Analog pins on RP2350.
+const (
+	ADC0 Pin = GPIO26
+	ADC1 Pin = GPIO27
+	ADC2 Pin = GPIO28
+	ADC3 Pin = GPIO29
+
+	thermADC = 30
+)
+
 const (
 	PinOutput PinMode = iota
 	PinInput
@@ -126,11 +136,17 @@ func (p Pin) Configure(config PinConfig) {
 		return
 	}
 	p.init()
-	mask := uint32(1) << p
+
 	switch config.Mode {
 	case PinOutput:
 		p.setFunc(fnSIO)
-		rp.SIO.GPIO_OE_SET.Set(mask)
+		if is48Pin && p >= 32 {
+			mask := uint32(1) << (p % 32)
+			rp.SIO.GPIO_HI_OE_SET.Set(mask)
+		} else {
+			mask := uint32(1) << p
+			rp.SIO.GPIO_OE_SET.Set(mask)
+		}
 	case PinInput:
 		p.setFunc(fnSIO)
 		p.pulloff()

@@ -16,6 +16,8 @@ const (
 	// Note: On RP2350, most spinlocks are unusable due to Errata 2
 	_NUMSPINLOCKS         = 32
 	_PICO_SPINLOCK_ID_IRQ = 9
+	// is48Pin notes whether the chip is RP2040 with 32 pins or RP2350 with 48 pins.
+	is48Pin = _NUMBANK0_GPIOS == 48
 )
 
 // UART on the RP2040

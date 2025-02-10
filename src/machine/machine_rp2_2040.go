@@ -45,6 +45,16 @@ const (
 	PinPIO1
 )
 
+// Analog pins on RP2040.
+const (
+	ADC0 Pin = GPIO26
+	ADC1 Pin = GPIO27
+	ADC2 Pin = GPIO28
+	ADC3 Pin = GPIO29
+
+	thermADC = 30
+)
+
 const (
 	clkGPOUT0 clockIndex = iota // GPIO Muxing 0
 	clkGPOUT1                   // GPIO Muxing 1

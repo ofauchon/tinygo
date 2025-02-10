@@ -11,15 +11,6 @@ import (
 // ADCChannel is the ADC peripheral mux channel. 0-4.
 type ADCChannel uint8
 
-// ADC channels. Only ADC_TEMP_SENSOR is public. The other channels are accessed via Machine.ADC objects
-const (
-	adc0_CH ADCChannel = iota
-	adc1_CH
-	adc2_CH
-	adc3_CH       // Note: GPIO29 not broken out on pico board
-	adcTempSensor // Internal temperature sensor channel
-)
-
 // Used to serialise ADC sampling
 var adcLock sync.Mutex
 
@@ -58,20 +49,10 @@ func (a ADC) Get() uint16 {
 
 // GetADCChannel returns the channel associated with the ADC pin.
 func (a ADC) GetADCChannel() (c ADCChannel, err error) {
-	err = nil
-	switch a.Pin {
-	case ADC0:
-		c = adc0_CH
-	case ADC1:
-		c = adc1_CH
-	case ADC2:
-		c = adc2_CH
-	case ADC3:
-		c = adc3_CH
-	default:
-		err = errors.New("no ADC channel for pin value")
+	if a.Pin < ADC0 {
+		return 0, errors.New("no ADC channel for pin value")
 	}
-	return c, err
+	return ADCChannel(a.Pin - ADC0), nil
 }
 
 // Configure sets the channel's associated pin to analog input mode.
@@ -113,12 +94,12 @@ func ReadTemperature() (millicelsius int32) {
 	if rp.ADC.CS.Get()&rp.ADC_CS_EN == 0 {
 		InitADC()
 	}
-
+	thermChan, _ := ADC{Pin: thermADC}.GetADCChannel()
 	// Enable temperature sensor bias source
 	rp.ADC.CS.SetBits(rp.ADC_CS_TS_EN)
 
 	// T = 27 - (ADC_voltage - 0.706)/0.001721
-	return (27000<<16 - (int32(adcTempSensor.getVoltage())-706<<16)*581) >> 16
+	return (27000<<16 - (int32(thermChan.getVoltage())-706<<16)*581) >> 16
 }
 
 // waitForReady spins waiting for the ADC peripheral to become ready.
@@ -129,18 +110,5 @@ func waitForReady() {
 
 // The Pin method returns the GPIO Pin associated with the ADC mux channel, if it has one.
 func (c ADCChannel) Pin() (p Pin, err error) {
-	err = nil
-	switch c {
-	case adc0_CH:
-		p = ADC0
-	case adc1_CH:
-		p = ADC1
-	case adc2_CH:
-		p = ADC2
-	case adc3_CH:
-		p = ADC3
-	default:
-		err = errors.New("no associated pin for channel")
-	}
-	return p, err
+	return Pin(c) + ADC0, nil
 }
