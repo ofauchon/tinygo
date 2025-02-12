@@ -594,6 +594,15 @@ func TestWasmExport(t *testing.T) {
 			noOutput:  true, // wasm-unknown cannot produce output
 			command:   true,
 		},
+		// Test buildmode=wasi-legacy with WASI.
+		{
+			name:      "WASIp1-legacy",
+			target:    "wasip1",
+			buildMode: "wasi-legacy",
+			scheduler: "none",
+			file:      "wasmexport-noscheduler.go",
+			command:   true,
+		},
 	}
 
 	for _, tc := range tests {

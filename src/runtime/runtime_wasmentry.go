@@ -52,6 +52,15 @@ func wasmEntryReactor() {
 	}
 }
 
+// This is the _start entry point, when using -buildmode=wasi-legacy.
+func wasmEntryLegacy() {
+	// These need to be initialized early so that the heap can be initialized.
+	initializeCalled = true
+	heapStart = uintptr(unsafe.Pointer(&heapStartSymbol))
+	heapEnd = uintptr(wasm_memory_size(0) * wasmPageSize)
+	run()
+}
+
 // Whether the runtime was initialized by a call to _initialize or _start.
 var initializeCalled bool
 

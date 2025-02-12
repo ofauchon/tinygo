@@ -283,6 +283,11 @@ func (c *compilerContext) getFunctionInfo(f *ssa.Function) functionInfo {
 		info.wasmName = "_start"
 		info.exported = true
 	}
+	if info.linkName == "runtime.wasmEntryLegacy" && c.BuildMode == "wasi-legacy" {
+		info.linkName = "_start"
+		info.wasmName = "_start"
+		info.exported = true
+	}
 
 	// Check for //go: pragmas, which may change the link name (among others).
 	c.parsePragmas(&info, f)

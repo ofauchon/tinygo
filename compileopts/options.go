@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	validBuildModeOptions     = []string{"default", "c-shared"}
+	validBuildModeOptions     = []string{"default", "c-shared", "wasi-legacy"}
 	validGCOptions            = []string{"none", "leaking", "conservative", "custom", "precise"}
 	validSchedulerOptions     = []string{"none", "tasks", "asyncify"}
 	validSerialOptions        = []string{"none", "uart", "usb", "rtt"}
