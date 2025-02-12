@@ -271,6 +271,10 @@ func (v Value) Comparable() bool {
 	}
 }
 
+func (v Value) Equal(u Value) bool {
+	panic("unimplemented: reflect.Value.Equal")
+}
+
 func (v Value) Addr() Value {
 	if !v.CanAddr() {
 		panic("reflect.Value.Addr of unaddressable value")

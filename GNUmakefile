@@ -309,11 +309,9 @@ TEST_PACKAGES_FAST = \
 	container/heap \
 	container/list \
 	container/ring \
-	crypto/des \
 	crypto/ecdsa \
 	crypto/elliptic \
 	crypto/md5 \
-	crypto/rc4 \
 	crypto/sha1 \
 	crypto/sha256 \
 	crypto/sha512 \
@@ -355,17 +353,11 @@ TEST_PACKAGES_FAST = \
 	unique \
 	$(nil)
 
-# Assume this will go away before Go2, so only check minor version.
-ifeq ($(filter $(shell $(GO) env GOVERSION | cut -f 2 -d.), 16 17 18), )
-TEST_PACKAGES_FAST += crypto/internal/nistec/fiat
-else
-TEST_PACKAGES_FAST += crypto/elliptic/internal/fiat
-endif
-
 # archive/zip requires os.ReadAt, which is not yet supported on windows
 # bytes requires mmap
 # compress/flate appears to hang on wasi
 # crypto/aes fails on wasi, needs panic()/recover()
+# crypto/des fails on wasi, needs panic()/recover()
 # crypto/hmac fails on wasi, it exits with a "slice out of range" panic
 # debug/plan9obj requires os.ReadAt, which is not yet supported on windows
 # image requires recover(), which is not yet supported on wasi
@@ -386,6 +378,7 @@ TEST_PACKAGES_LINUX := \
 	archive/zip \
 	compress/flate \
 	crypto/aes \
+	crypto/des \
 	crypto/hmac \
 	debug/dwarf \
 	debug/plan9obj \
@@ -405,10 +398,11 @@ TEST_PACKAGES_LINUX := \
 
 TEST_PACKAGES_DARWIN := $(TEST_PACKAGES_LINUX)
 
+# os/user requires t.Skip() support
 TEST_PACKAGES_WINDOWS := \
 	compress/flate \
+	crypto/des \
 	crypto/hmac \
-	os/user \
 	strconv \
 	text/template/parse \
 	$(nil)
