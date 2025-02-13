@@ -747,6 +747,8 @@ endif
 	@$(MD5SUM) test.hex
 	$(TINYGO) build -size short -o test.hex -target=tiny2350            examples/blinky1
 	@$(MD5SUM) test.hex
+	$(TINYGO) build -size short -o test.hex -target=pico-plus2          examples/blinky1
+	@$(MD5SUM) test.hex
 	$(TINYGO) build -size short -o test.hex -target=waveshare-rp2040-tiny examples/echo
 	@$(MD5SUM) test.hex
 	# test pwm
