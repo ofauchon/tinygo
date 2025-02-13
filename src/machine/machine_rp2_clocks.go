@@ -137,6 +137,8 @@ func (clk *clock) configure(src, auxsrc, srcFreq, freq uint32) {
 
 }
 
+const pllsysFB, pllsysPD1, pllsysPD2 uint32 = 125, 6, 2 // RP2040 running 125MHz with 1500MHz VCO.
+
 // init initializes the clock hardware.
 //
 // Must be called before any other clock function.
@@ -163,8 +165,8 @@ func (clks *clocksType) init() {
 	//                   REF     FBDIV VCO            POSTDIV
 	// pllSys: 12 / 1 = 12MHz * 125 = 1500MHZ / 6 / 2 = 125MHz
 	// pllUSB: 12 / 1 = 12MHz * 40  = 480 MHz / 5 / 2 =  48MHz
-	pllSys.init(1, 1500*MHz, 6, 2)
-	pllUSB.init(1, 480*MHz, 5, 2)
+	pllSys.init(1, uint32(pllsysFB), uint32(pllsysPD1), uint32(pllsysPD2))
+	pllUSB.init(1, 40, 5, 2)
 
 	// Configure clocks
 	// clkRef = xosc (12MHz) / 1 = 12MHz

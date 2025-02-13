@@ -35,7 +35,7 @@ const (
 	ADC5 Pin = GPIO45
 	ADC6 Pin = GPIO46
 	ADC7 Pin = GPIO47
-
+	// Ninth ADC channel.
 	thermADC = 48
 )
 

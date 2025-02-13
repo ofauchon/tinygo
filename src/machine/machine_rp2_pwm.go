@@ -146,13 +146,14 @@ func (p *pwmGroup) Counter() uint32 {
 
 // Period returns the used PWM period in nanoseconds.
 func (p *pwmGroup) Period() uint64 {
-	freq := CPUFrequency()
+	// Lines below can overflow if operations done without care.
+	// maxInt=255, maxFrac=15, maxTop=65536, maxPHC=1 => maxProduct= (16*255+15) * (65536*2*1e9) = 5.3673e17 < MaxUint64=1.8e19 (close call.)
+	const compileTimeCheckPeriod uint64 = (255*16 + 15) * (65535 + 1) * 2 * 1e9
+	freq := uint64(CPUFrequency())
 	top := p.getWrap()
 	phc := p.getPhaseCorrect()
 	Int, frac := p.getClockDiv()
-	// Lines below can overflow if operations done without care.
-	term2 := 16 * uint64((top+1)*(phc+1)) * 1e9 / uint64(freq) // 1e9/freq == CPU period in nanoseconds.
-	return (uint64(Int) + uint64(frac)) * term2 / 16           // cycles = (TOP+1) * (CSRPHCorrect + 1) * (DIV_INT + DIV_FRAC/16)
+	return (16*uint64(Int) + uint64(frac)) * uint64((top+1)*(phc+1)*1e9) / (16 * freq) // cycles = (TOP+1) * (CSRPHCorrect + 1) * (DIV_INT + DIV_FRAC/16)
 }
 
 // SetInverting sets whether to invert the output of this channel.
@@ -267,6 +268,9 @@ func (pwm *pwmGroup) setPeriod(period uint64) error {
 		// Maximum Period is 268369920ns on rp2040, given by (16*255+15)*8*(1+0xffff)*(1+1)/16
 		// With no phase shift max period is half of this value.
 		maxPeriod = 268 * milliseconds
+		// This will be a compile time error if this method is at risk of overflowing. cpufreq=155MHz for typical RP2350.
+		maxCPUFreq                       = 4 * GHz // Can go up to 4GHz without overflowing :)
+		compileTimeCheckSetPeriod uint64 = 16 * maxPeriod * maxCPUFreq
 	)
 
 	if period > maxPeriod || period < 8 {
@@ -280,11 +284,13 @@ func (pwm *pwmGroup) setPeriod(period uint64) error {
 	//  DIV_INT + DIV_FRAC/16 = cycles / ( (TOP+1) * (CSRPHCorrect+1) )  // DIV_FRAC/16 is always 0 in this equation
 	// where cycles must be converted to time:
 	//  target_period = cycles * period_per_cycle ==> cycles = target_period/period_per_cycle
-	freq := uint64(CPUFrequency())
-	phc := uint64(pwm.getPhaseCorrect())
-	rhs := 16e9 * period / ((1 + phc) * freq * (1 + topStart)) // right-hand-side of equation, scaled so frac is not divided
-	whole := rhs / 16
-	frac := rhs % 16
+	var (
+		freq  = uint64(CPUFrequency())
+		phc   = uint64(pwm.getPhaseCorrect())
+		rhs   = 16 * period * freq / ((1 + phc) * 1e9 * (1 + topStart)) // right-hand-side of equation, scaled so frac is not divided
+		whole = rhs / 16
+		frac  = rhs % 16
+	)
 	switch {
 	case whole > 0xff:
 		whole = 0xff
@@ -297,7 +303,7 @@ func (pwm *pwmGroup) setPeriod(period uint64) error {
 
 	// Step 2 is acquiring a better top value. Clearing the equation:
 	// TOP =  cycles / ( (DIVINT+DIVFRAC/16) * (CSRPHCorrect+1) ) - 1
-	top := 16e9*period/((16*whole+frac)*freq*(1+phc)) - 1
+	top := 16*period*freq/((1+phc)*1e9*(16*whole+frac)) - 1
 	if top > maxTop {
 		top = maxTop
 	}

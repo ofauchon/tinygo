@@ -33,16 +33,6 @@ const (
 		rp.PADS_BANK0_GPIO0_ISO_Msk
 )
 
-// Analog pins on RP2350.
-const (
-	ADC0 Pin = GPIO26
-	ADC1 Pin = GPIO27
-	ADC2 Pin = GPIO28
-	ADC3 Pin = GPIO29
-
-	thermADC = 30
-)
-
 const (
 	PinOutput PinMode = iota
 	PinInput

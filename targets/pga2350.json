@@ -1,0 +1,4 @@
+{
+    "inherits": ["rp2350b"],
+    "build-tags": ["pga2350"]
+}
