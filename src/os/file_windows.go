@@ -142,3 +142,7 @@ func isWindowsNulName(name string) bool {
 	}
 	return true
 }
+
+func (f *File) chmod(mode FileMode) error {
+	return ErrNotImplemented
+}

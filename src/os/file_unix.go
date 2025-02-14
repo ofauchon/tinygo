@@ -151,6 +151,21 @@ func (f *File) Truncate(size int64) (err error) {
 	return Truncate(f.name, size)
 }
 
+func (f *File) chmod(mode FileMode) error {
+	if f.handle == nil {
+		return ErrClosed
+	}
+
+	longName := fixLongPath(f.name)
+	e := ignoringEINTR(func() error {
+		return syscall.Chmod(longName, syscallMode(mode))
+	})
+	if e != nil {
+		return &PathError{Op: "chmod", Path: f.name, Err: e}
+	}
+	return nil
+}
+
 // ReadAt reads up to len(b) bytes from the File starting at the given absolute offset.
 // It returns the number of bytes read and any error encountered, possibly io.EOF.
 // At end of file, Pread returns 0, io.EOF.

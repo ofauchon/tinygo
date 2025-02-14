@@ -307,6 +307,17 @@ func (f *File) Sync() (err error) {
 	return
 }
 
+// Chmod changes the mode of the file to mode. If there is an error, it will be
+// of type *PathError.
+func (f *File) Chmod(mode FileMode) (err error) {
+	if f.handle == nil {
+		err = ErrClosed
+	} else {
+		err = f.chmod(mode)
+	}
+	return
+}
+
 // LinkError records an error during a link or symlink or rename system call and
 // the paths that caused it.
 type LinkError struct {

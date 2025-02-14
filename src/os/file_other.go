@@ -149,3 +149,7 @@ func (f *File) Truncate(size int64) (err error) {
 
 	return Truncate(f.name, size)
 }
+
+func (f *File) chmod(mode FileMode) error {
+	return ErrUnsupported
+}
