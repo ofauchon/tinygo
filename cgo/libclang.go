@@ -219,7 +219,7 @@ func (f *cgoFile) createASTNode(name string, c clangCursor) (ast.Node, any) {
 		numArgs := int(C.tinygo_clang_Cursor_getNumArguments(c))
 		obj := &ast.Object{
 			Kind: ast.Fun,
-			Name: "C." + name,
+			Name: "_Cgo_" + name,
 		}
 		exportName := name
 		localName := name
@@ -257,7 +257,7 @@ func (f *cgoFile) createASTNode(name string, c clangCursor) (ast.Node, any) {
 			},
 			Name: &ast.Ident{
 				NamePos: pos,
-				Name:    "C." + localName,
+				Name:    "_Cgo_" + localName,
 				Obj:     obj,
 			},
 			Type: &ast.FuncType{
@@ -319,7 +319,7 @@ func (f *cgoFile) createASTNode(name string, c clangCursor) (ast.Node, any) {
 		return decl, stringSignature
 	case C.CXCursor_StructDecl, C.CXCursor_UnionDecl:
 		typ := f.makeASTRecordType(c, pos)
-		typeName := "C." + name
+		typeName := "_Cgo_" + name
 		typeExpr := typ.typeExpr
 		if typ.unionSize != 0 {
 			// Convert to a single-field struct type.
@@ -340,7 +340,7 @@ func (f *cgoFile) createASTNode(name string, c clangCursor) (ast.Node, any) {
 		obj.Decl = typeSpec
 		return typeSpec, typ
 	case C.CXCursor_TypedefDecl:
-		typeName := "C." + name
+		typeName := "_Cgo_" + name
 		underlyingType := C.tinygo_clang_getTypedefDeclUnderlyingType(c)
 		obj := &ast.Object{
 			Kind: ast.Typ,
@@ -378,12 +378,12 @@ func (f *cgoFile) createASTNode(name string, c clangCursor) (ast.Node, any) {
 		}
 		obj := &ast.Object{
 			Kind: ast.Var,
-			Name: "C." + name,
+			Name: "_Cgo_" + name,
 		}
 		valueSpec := &ast.ValueSpec{
 			Names: []*ast.Ident{{
 				NamePos: pos,
-				Name:    "C." + name,
+				Name:    "_Cgo_" + name,
 				Obj:     obj,
 			}},
 			Type: typeExpr,
@@ -407,12 +407,12 @@ func (f *cgoFile) createASTNode(name string, c clangCursor) (ast.Node, any) {
 		}
 		obj := &ast.Object{
 			Kind: ast.Con,
-			Name: "C." + name,
+			Name: "_Cgo_" + name,
 		}
 		valueSpec := &ast.ValueSpec{
 			Names: []*ast.Ident{{
 				NamePos: pos,
-				Name:    "C." + name,
+				Name:    "_Cgo_" + name,
 				Obj:     obj,
 			}},
 			Values: []ast.Expr{expr},
@@ -423,7 +423,7 @@ func (f *cgoFile) createASTNode(name string, c clangCursor) (ast.Node, any) {
 	case C.CXCursor_EnumDecl:
 		obj := &ast.Object{
 			Kind: ast.Typ,
-			Name: "C." + name,
+			Name: "_Cgo_" + name,
 		}
 		underlying := C.tinygo_clang_getEnumDeclIntegerType(c)
 		// TODO: gc's CGo implementation uses types such as `uint32` for enums
@@ -431,7 +431,7 @@ func (f *cgoFile) createASTNode(name string, c clangCursor) (ast.Node, any) {
 		typeSpec := &ast.TypeSpec{
 			Name: &ast.Ident{
 				NamePos: pos,
-				Name:    "C." + name,
+				Name:    "_Cgo_" + name,
 				Obj:     obj,
 			},
 			Assign: pos,
@@ -454,12 +454,12 @@ func (f *cgoFile) createASTNode(name string, c clangCursor) (ast.Node, any) {
 		}
 		obj := &ast.Object{
 			Kind: ast.Con,
-			Name: "C." + name,
+			Name: "_Cgo_" + name,
 		}
 		valueSpec := &ast.ValueSpec{
 			Names: []*ast.Ident{{
 				NamePos: pos,
-				Name:    "C." + name,
+				Name:    "_Cgo_" + name,
 				Obj:     obj,
 			}},
 			Values: []ast.Expr{expr},
@@ -745,27 +745,27 @@ func (f *cgoFile) makeASTType(typ C.CXType, pos token.Pos) ast.Expr {
 	var typeName string
 	switch typ.kind {
 	case C.CXType_Char_S, C.CXType_Char_U:
-		typeName = "C.char"
+		typeName = "_Cgo_char"
 	case C.CXType_SChar:
-		typeName = "C.schar"
+		typeName = "_Cgo_schar"
 	case C.CXType_UChar:
-		typeName = "C.uchar"
+		typeName = "_Cgo_uchar"
 	case C.CXType_Short:
-		typeName = "C.short"
+		typeName = "_Cgo_short"
 	case C.CXType_UShort:
-		typeName = "C.ushort"
+		typeName = "_Cgo_ushort"
 	case C.CXType_Int:
-		typeName = "C.int"
+		typeName = "_Cgo_int"
 	case C.CXType_UInt:
-		typeName = "C.uint"
+		typeName = "_Cgo_uint"
 	case C.CXType_Long:
-		typeName = "C.long"
+		typeName = "_Cgo_long"
 	case C.CXType_ULong:
-		typeName = "C.ulong"
+		typeName = "_Cgo_ulong"
 	case C.CXType_LongLong:
-		typeName = "C.longlong"
+		typeName = "_Cgo_longlong"
 	case C.CXType_ULongLong:
-		typeName = "C.ulonglong"
+		typeName = "_Cgo_ulonglong"
 	case C.CXType_Bool:
 		typeName = "bool"
 	case C.CXType_Float, C.CXType_Double, C.CXType_LongDouble:
@@ -896,7 +896,7 @@ func (f *cgoFile) makeASTType(typ C.CXType, pos token.Pos) ast.Expr {
 		typeSpelling := getString(C.clang_getTypeSpelling(typ))
 		typeKindSpelling := getString(C.clang_getTypeKindSpelling(typ.kind))
 		f.addError(pos, fmt.Sprintf("unknown C type: %v (libclang type kind %s)", typeSpelling, typeKindSpelling))
-		typeName = "C.<unknown>"
+		typeName = "_Cgo_<unknown>"
 	}
 	return &ast.Ident{
 		NamePos: pos,
@@ -913,7 +913,7 @@ func (p *cgoPackage) getIntegerType(name string, cursor clangCursor) *ast.TypeSp
 	var goName string
 	typeSize := C.clang_Type_getSizeOf(underlyingType)
 	switch name {
-	case "C.char":
+	case "_Cgo_char":
 		if typeSize != 1 {
 			// This happens for some very special purpose architectures
 			// (DSPs etc.) that are not currently targeted.
@@ -926,7 +926,7 @@ func (p *cgoPackage) getIntegerType(name string, cursor clangCursor) *ast.TypeSp
 		case C.CXType_Char_U:
 			goName = "uint8"
 		}
-	case "C.schar", "C.short", "C.int", "C.long", "C.longlong":
+	case "_Cgo_schar", "_Cgo_short", "_Cgo_int", "_Cgo_long", "_Cgo_longlong":
 		switch typeSize {
 		case 1:
 			goName = "int8"
@@ -937,7 +937,7 @@ func (p *cgoPackage) getIntegerType(name string, cursor clangCursor) *ast.TypeSp
 		case 8:
 			goName = "int64"
 		}
-	case "C.uchar", "C.ushort", "C.uint", "C.ulong", "C.ulonglong":
+	case "_Cgo_uchar", "_Cgo_ushort", "_Cgo_uint", "_Cgo_ulong", "_Cgo_ulonglong":
 		switch typeSize {
 		case 1:
 			goName = "uint8"

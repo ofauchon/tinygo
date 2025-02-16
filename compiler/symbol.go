@@ -432,9 +432,8 @@ func (c *compilerContext) parsePragmas(info *functionInfo, f *ssa.Function) {
 			// pass for C variadic functions. This includes both explicit
 			// (with ...) and implicit (no parameters in signature)
 			// functions.
-			if strings.HasPrefix(f.Name(), "C.") {
-				// This prefix cannot naturally be created, it must have
-				// been created as a result of CGo preprocessing.
+			if strings.HasPrefix(f.Name(), "_Cgo_") {
+				// This prefix was created as a result of CGo preprocessing.
 				info.variadic = true
 			}
 		}
