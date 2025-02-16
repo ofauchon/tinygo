@@ -64,3 +64,14 @@ type BlockDevice interface {
 	// EraseBlockSize to map addresses to blocks.
 	EraseBlocks(start, len int64) error
 }
+
+// pad data if needed so it is long enough for correct byte alignment on writes.
+func flashPad(p []byte, writeBlockSize int) []byte {
+	overflow := len(p) % writeBlockSize
+	if overflow != 0 {
+		for i := 0; i < writeBlockSize-overflow; i++ {
+			p = append(p, 0xff)
+		}
+	}
+	return p
+}

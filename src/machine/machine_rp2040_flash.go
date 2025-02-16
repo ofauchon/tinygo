@@ -3,7 +3,6 @@
 package machine
 
 import (
-	"bytes"
 	"unsafe"
 )
 
@@ -99,17 +98,6 @@ func (f flashBlockDevice) EraseBlockSize() int64 {
 // EraseBlockSize to map addresses to blocks.
 func (f flashBlockDevice) EraseBlocks(start, length int64) error {
 	return f.eraseBlocks(start, length)
-}
-
-// pad data if needed so it is long enough for correct byte alignment on writes.
-func (f flashBlockDevice) pad(p []byte) []byte {
-	overflow := int64(len(p)) % f.WriteBlockSize()
-	if overflow == 0 {
-		return p
-	}
-
-	padding := bytes.Repeat([]byte{0xff}, int(f.WriteBlockSize()-overflow))
-	return append(p, padding...)
 }
 
 // return the correct address to be used for write

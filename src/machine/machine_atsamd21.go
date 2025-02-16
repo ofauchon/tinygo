@@ -7,7 +7,6 @@
 package machine
 
 import (
-	"bytes"
 	"device/arm"
 	"device/sam"
 	"errors"
@@ -1917,7 +1916,7 @@ func (f flashBlockDevice) WriteAt(p []byte, off int64) (n int, err error) {
 	f.ensureInitComplete()
 
 	address := FlashDataStart() + uintptr(off)
-	padded := f.pad(p)
+	padded := flashPad(p, int(f.WriteBlockSize()))
 
 	waitWhileFlashBusy()
 
@@ -1990,17 +1989,6 @@ func (f flashBlockDevice) EraseBlocks(start, len int64) error {
 	}
 
 	return nil
-}
-
-// pad data if needed so it is long enough for correct byte alignment on writes.
-func (f flashBlockDevice) pad(p []byte) []byte {
-	overflow := int64(len(p)) % f.WriteBlockSize()
-	if overflow == 0 {
-		return p
-	}
-
-	padding := bytes.Repeat([]byte{0xff}, int(f.WriteBlockSize()-overflow))
-	return append(p, padding...)
 }
 
 func (f flashBlockDevice) ensureInitComplete() {
