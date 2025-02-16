@@ -1,9 +1,9 @@
 package descriptor
 
 import (
-	"bytes"
 	"errors"
 	"internal/binary"
+	"internal/bytealg"
 )
 
 var configurationCDCHID = [configurationTypeLen]byte{
@@ -87,7 +87,7 @@ func FindClassHIDType(des, class []byte) (ClassHIDType, error) {
 
 	// search only for ClassHIDType without the ClassLength,
 	// in case it has already been set.
-	idx := bytes.Index(des, class[:ClassHIDTypeLen-2])
+	idx := bytealg.Index(des, class[:ClassHIDTypeLen-2])
 	if idx == -1 {
 		return ClassHIDType{}, errNoClassHIDFound
 	}
