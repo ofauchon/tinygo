@@ -31,3 +31,14 @@ func scheduleLogChan(msg string, ch *channel, t *task.Task) {
 func Goexit() {
 	panicOrGoexit(nil, panicGoexit)
 }
+
+//go:linkname fips_getIndicator crypto/internal/fips140.getIndicator
+func fips_getIndicator() uint8 {
+	return task.Current().FipsIndicator
+}
+
+//go:linkname fips_setIndicator crypto/internal/fips140.setIndicator
+func fips_setIndicator(indicator uint8) {
+	// This indicator is stored per goroutine.
+	task.Current().FipsIndicator = indicator
+}

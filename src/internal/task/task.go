@@ -21,6 +21,9 @@ type Task struct {
 	// state is the underlying running state of the task.
 	state state
 
+	// This is needed for some crypto packages.
+	FipsIndicator uint8
+
 	// DeferFrame stores a pointer to the (stack allocated) defer frame of the
 	// goroutine that is used for the recover builtin.
 	DeferFrame unsafe.Pointer

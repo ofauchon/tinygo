@@ -226,3 +226,8 @@ func divideByZeroPanic() {
 func blockingPanic() {
 	runtimePanicAt(returnAddress(0), "trying to do blocking operation in exported function")
 }
+
+//go:linkname fips_fatal crypto/internal/fips140.fatal
+func fips_fatal(msg string) {
+	runtimePanic(msg)
+}
