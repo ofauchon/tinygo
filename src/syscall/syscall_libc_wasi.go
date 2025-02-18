@@ -438,6 +438,13 @@ type RawSockaddrInet6 struct {
 	// stub
 }
 
+func RandomGet(b []byte) error {
+	if len(b) > 0 {
+		libc_arc4random_buf(unsafe.Pointer(&b[0]), uint(len(b)))
+	}
+	return nil
+}
+
 // This is a stub, it is not functional.
 func Syscall(trap, a1, a2, a3 uintptr) (r1, r2 uintptr, err Errno)
 
@@ -483,3 +490,8 @@ func libc_fdclosedir(unsafe.Pointer) int32
 //
 //export readdir
 func libc_readdir(unsafe.Pointer) *Dirent
+
+// void arc4random_buf(void *buf, size_t buflen);
+//
+//export arc4random_buf
+func libc_arc4random_buf(buf unsafe.Pointer, buflen uint)
