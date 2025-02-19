@@ -13,6 +13,7 @@ const hasParallelism = false
 // With the "none" scheduler, init and the main function are invoked directly.
 func run() {
 	initHeap()
+	initRand()
 	initAll()
 	callMain()
 	mainExited = true

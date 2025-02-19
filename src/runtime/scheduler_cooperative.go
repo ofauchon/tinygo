@@ -247,6 +247,7 @@ func sleep(duration int64) {
 // With a scheduler, init and the main function are invoked in a goroutine before starting the scheduler.
 func run() {
 	initHeap()
+	initRand()
 	go func() {
 		initAll()
 		callMain()

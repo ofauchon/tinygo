@@ -35,6 +35,7 @@ func wasmEntryReactor() {
 	heapStart = uintptr(unsafe.Pointer(&heapStartSymbol))
 	heapEnd = uintptr(wasm_memory_size(0) * wasmPageSize)
 	initHeap()
+	initRand()
 
 	if hasScheduler {
 		// A package initializer might do funky stuff like start a goroutine and

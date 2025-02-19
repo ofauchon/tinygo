@@ -23,13 +23,13 @@ func fastrand() uint32 {
 	return xorshift32State
 }
 
-func init() {
+func initRand() {
 	r, _ := hardwareRand()
 	xorshift64State = uint64(r | 1) // protect against 0
 	xorshift32State = uint32(xorshift64State)
 }
 
-var xorshift32State uint32
+var xorshift32State uint32 = 1
 
 func xorshift32(x uint32) uint32 {
 	// Algorithm "xor" from p. 4 of Marsaglia, "Xorshift RNGs".
@@ -49,7 +49,7 @@ func fastrand64() uint64 {
 	return xorshift64State
 }
 
-var xorshift64State uint64
+var xorshift64State uint64 = 1
 
 // 64-bit xorshift multiply rng from http://vigna.di.unimi.it/ftp/papers/xorshift.pdf
 func xorshiftMult64(x uint64) uint64 {
