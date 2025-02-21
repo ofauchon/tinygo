@@ -569,21 +569,21 @@ smoketest: testchdir
 	@$(MD5SUM) test.hex
 	# test simulated boards on play.tinygo.org
 ifneq ($(WASM), 0)
-	$(TINYGO) build -size short -o test.wasm -tags=arduino              examples/blinky1
+	GOOS=js GOARCH=wasm $(TINYGO) build -size short -o test.wasm -tags=arduino              examples/blinky1
 	@$(MD5SUM) test.wasm
-	$(TINYGO) build -size short -o test.wasm -tags=hifive1b             examples/blinky1
+	GOOS=js GOARCH=wasm $(TINYGO) build -size short -o test.wasm -tags=hifive1b             examples/blinky1
 	@$(MD5SUM) test.wasm
-	$(TINYGO) build -size short -o test.wasm -tags=reelboard            examples/blinky1
+	GOOS=js GOARCH=wasm $(TINYGO) build -size short -o test.wasm -tags=reelboard            examples/blinky1
 	@$(MD5SUM) test.wasm
-	$(TINYGO) build -size short -o test.wasm -tags=microbit             examples/microbit-blink
+	GOOS=js GOARCH=wasm $(TINYGO) build -size short -o test.wasm -tags=microbit             examples/microbit-blink
 	@$(MD5SUM) test.wasm
-	$(TINYGO) build -size short -o test.wasm -tags=circuitplay_express  examples/blinky1
+	GOOS=js GOARCH=wasm $(TINYGO) build -size short -o test.wasm -tags=circuitplay_express  examples/blinky1
 	@$(MD5SUM) test.wasm
-	$(TINYGO) build -size short -o test.wasm -tags=circuitplay_bluefruit examples/blinky1
+	GOOS=js GOARCH=wasm $(TINYGO) build -size short -o test.wasm -tags=circuitplay_bluefruit examples/blinky1
 	@$(MD5SUM) test.wasm
-	$(TINYGO) build -size short -o test.wasm -tags=mch2022              examples/machinetest
+	GOOS=js GOARCH=wasm $(TINYGO) build -size short -o test.wasm -tags=mch2022              examples/machinetest
 	@$(MD5SUM) test.wasm
-	$(TINYGO) build -size short -o test.wasm -tags=gopher_badge         examples/blinky1
+	GOOS=js GOARCH=wasm $(TINYGO) build -size short -o test.wasm -tags=gopher_badge         examples/blinky1
 	@$(MD5SUM) test.wasm
 endif
 	# test all targets/boards
