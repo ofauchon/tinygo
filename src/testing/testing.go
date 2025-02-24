@@ -17,6 +17,8 @@ import (
 	"io/fs"
 	"math/rand"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -388,6 +390,49 @@ func (c *common) Setenv(key, value string) {
 			os.Unsetenv(key)
 		})
 	}
+}
+
+// Chdir calls os.Chdir(dir) and uses Cleanup to restore the current
+// working directory to its original value after the test. On Unix, it
+// also sets PWD environment variable for the duration of the test.
+//
+// Because Chdir affects the whole process, it cannot be used
+// in parallel tests or tests with parallel ancestors.
+func (c *common) Chdir(dir string) {
+	// Note: function copied from the Go 1.24.0 source tree.
+
+	oldwd, err := os.Open(".")
+	if err != nil {
+		c.Fatal(err)
+	}
+	if err := os.Chdir(dir); err != nil {
+		c.Fatal(err)
+	}
+	// On POSIX platforms, PWD represents “an absolute pathname of the
+	// current working directory.” Since we are changing the working
+	// directory, we should also set or update PWD to reflect that.
+	switch runtime.GOOS {
+	case "windows", "plan9":
+		// Windows and Plan 9 do not use the PWD variable.
+	default:
+		if !filepath.IsAbs(dir) {
+			dir, err = os.Getwd()
+			if err != nil {
+				c.Fatal(err)
+			}
+		}
+		c.Setenv("PWD", dir)
+	}
+	c.Cleanup(func() {
+		err := oldwd.Chdir()
+		oldwd.Close()
+		if err != nil {
+			// It's not safe to continue with tests if we can't
+			// get back to the original working directory. Since
+			// we are holding a dirfd, this is highly unlikely.
+			panic("testing.Chdir: " + err.Error())
+		}
+	})
 }
 
 // runCleanup is called at the end of the test.
