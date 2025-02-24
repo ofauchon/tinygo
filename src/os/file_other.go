@@ -42,6 +42,12 @@ func NewFile(fd uintptr, name string) *File {
 	return &File{&file{handle: stdioFileHandle(fd), name: name}}
 }
 
+// Chdir changes the current working directory to the named directory.
+// If there is an error, it will be of type *PathError.
+func Chdir(dir string) error {
+	return ErrNotImplemented
+}
+
 // Rename renames (moves) oldpath to newpath.
 // If newpath already exists and is not a directory, Rename replaces it.
 // OS-specific restrictions may apply when oldpath and newpath are in different directories.
