@@ -166,6 +166,22 @@ func (f *File) chmod(mode FileMode) error {
 	return nil
 }
 
+func (f *File) chdir() error {
+	if f.handle == nil {
+		return ErrClosed
+	}
+
+	// TODO: use syscall.Fchdir instead
+	longName := fixLongPath(f.name)
+	e := ignoringEINTR(func() error {
+		return syscall.Chdir(longName)
+	})
+	if e != nil {
+		return &PathError{Op: "chdir", Path: f.name, Err: e}
+	}
+	return nil
+}
+
 // ReadAt reads up to len(b) bytes from the File starting at the given absolute offset.
 // It returns the number of bytes read and any error encountered, possibly io.EOF.
 // At end of file, Pread returns 0, io.EOF.
