@@ -297,7 +297,7 @@ jobs:
           - goarch: arm
             toolchain: arm-linux-gnueabihf
             libc: armhf
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04 # note: use the oldest image available! (see above)
     needs: build-linux
     steps:
       - name: Checkout
@@ -346,7 +346,7 @@ jobs:
         uses: actions/cache/restore@v4
         id: cache-llvm-build
         with:
-          key: llvm-build-19-linux-${{ matrix.goarch }}-v2
+          key: llvm-build-19-linux-${{ matrix.goarch }}-v3
           path: llvm-build
       - name: Build LLVM
         if: steps.cache-llvm-build.outputs.cache-hit != 'true'
