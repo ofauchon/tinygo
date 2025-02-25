@@ -17,7 +17,6 @@ import (
 	"io/fs"
 	"math/rand"
 	"os"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -208,8 +207,9 @@ func (c *common) Failed() bool {
 // current goroutine).
 func (c *common) FailNow() {
 	c.Fail()
+
 	c.finished = true
-	runtime.Goexit()
+	c.Error("FailNow is incomplete, requires runtime.Goexit()")
 }
 
 // log generates the output.
@@ -281,7 +281,7 @@ func (c *common) Skipf(format string, args ...interface{}) {
 func (c *common) SkipNow() {
 	c.skip()
 	c.finished = true
-	runtime.Goexit()
+	c.Error("SkipNow is incomplete, requires runtime.Goexit()")
 }
 
 func (c *common) skip() {
