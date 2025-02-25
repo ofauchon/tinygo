@@ -48,20 +48,22 @@ Here is a small TinyGo program for use by a WASI host application:
 ```go
 package main
 
-//go:wasm-module yourmodulename
-//export add
+//go:wasmexport add
 func add(x, y uint32) uint32 {
 	return x + y
 }
-
-// main is required for the `wasip1` target, even if it isn't used.
-func main() {}
 ```
 
-This compiles the above TinyGo program for use on any WASI runtime:
+This compiles the above TinyGo program for use on any WASI Preview 1 runtime:
 
 ```shell
-tinygo build -o main.wasm -target=wasip1 main.go
+tinygo build -buildmode=c-shared -o add.wasm -target=wasip1 add.go
+```
+
+You can also use the same syntax as Go 1.24+:
+
+```shell
+GOARCH=wasip1 GOOS=wasm tinygo build -buildmode=c-shared -o add.wasm add.go
 ```
 
 ## Installation
