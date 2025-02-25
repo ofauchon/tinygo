@@ -22,7 +22,7 @@ package machine
 // This form sends zeros, putting the result into the rx buffer. Good for reading a "result packet":
 //
 //	spi.Tx(nil, rx)
-func (spi SPI) Tx(w, r []byte) error {
+func (spi *SPI) Tx(w, r []byte) error {
 	var err error
 
 	switch {

@@ -60,7 +60,7 @@ var I2C1 = &I2C{
 }
 
 // SPI configuration
-var SPI0 = SPI{
+var SPI0 = &SPI{
 	spcr: avr.SPCR0,
 	spdr: avr.SPDR0,
 	spsr: avr.SPSR0,
@@ -82,7 +82,7 @@ var SPI0 = SPI{
 	cs:  PB2,
 }
 
-var SPI1 = SPI{
+var SPI1 = &SPI{
 	spcr: avr.SPCR1,
 	spdr: avr.SPDR1,
 	spsr: avr.SPSR1,

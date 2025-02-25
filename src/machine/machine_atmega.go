@@ -257,7 +257,7 @@ type SPI struct {
 }
 
 // Configure is intended to setup the SPI interface.
-func (s SPI) Configure(config SPIConfig) error {
+func (s *SPI) Configure(config SPIConfig) error {
 
 	// This is only here to help catch a bug with the configuration
 	// where a machine missed a value.
@@ -330,7 +330,7 @@ func (s SPI) Configure(config SPIConfig) error {
 }
 
 // Transfer writes the byte into the register and returns the read content
-func (s SPI) Transfer(b byte) (byte, error) {
+func (s *SPI) Transfer(b byte) (byte, error) {
 	s.spdr.Set(uint8(b))
 
 	for !s.spsr.HasBits(s.spsrSPIF) {

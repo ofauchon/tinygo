@@ -1224,7 +1224,7 @@ type SPIConfig struct {
 }
 
 // Configure is intended to setup the SPI interface.
-func (spi SPI) Configure(config SPIConfig) error {
+func (spi *SPI) Configure(config SPIConfig) error {
 	// Use default pins if not set.
 	if config.SCK == 0 && config.SDO == 0 && config.SDI == 0 {
 		config.SCK = SPI0_SCK_PIN
@@ -1346,7 +1346,7 @@ func (spi SPI) Configure(config SPIConfig) error {
 }
 
 // Transfer writes/reads a single byte using the SPI interface.
-func (spi SPI) Transfer(w byte) (byte, error) {
+func (spi *SPI) Transfer(w byte) (byte, error) {
 	// write data
 	spi.Bus.DATA.Set(uint32(w))
 
@@ -1375,7 +1375,7 @@ func (spi SPI) Transfer(w byte) (byte, error) {
 // This form sends zeros, putting the result into the rx buffer. Good for reading a "result packet":
 //
 //	spi.Tx(nil, rx)
-func (spi SPI) Tx(w, r []byte) error {
+func (spi *SPI) Tx(w, r []byte) error {
 	switch {
 	case w == nil:
 		// read only, so write zero and read a result.
@@ -1396,7 +1396,7 @@ func (spi SPI) Tx(w, r []byte) error {
 	return nil
 }
 
-func (spi SPI) tx(tx []byte) {
+func (spi *SPI) tx(tx []byte) {
 	for i := 0; i < len(tx); i++ {
 		for !spi.Bus.INTFLAG.HasBits(sam.SERCOM_SPI_INTFLAG_DRE) {
 		}
@@ -1411,7 +1411,7 @@ func (spi SPI) tx(tx []byte) {
 	}
 }
 
-func (spi SPI) rx(rx []byte) {
+func (spi *SPI) rx(rx []byte) {
 	spi.Bus.DATA.Set(0)
 	for !spi.Bus.INTFLAG.HasBits(sam.SERCOM_SPI_INTFLAG_DRE) {
 	}
@@ -1427,7 +1427,7 @@ func (spi SPI) rx(rx []byte) {
 	rx[len(rx)-1] = byte(spi.Bus.DATA.Get())
 }
 
-func (spi SPI) txrx(tx, rx []byte) {
+func (spi *SPI) txrx(tx, rx []byte) {
 	spi.Bus.DATA.Set(uint32(tx[0]))
 	for !spi.Bus.INTFLAG.HasBits(sam.SERCOM_SPI_INTFLAG_DRE) {
 	}

@@ -333,16 +333,16 @@ type SPI struct {
 // Since the first interface is named SPI1, both SPI0 and SPI1 refer to SPI1.
 // TODO: implement SPI2 and SPI3.
 var (
-	SPI1 = SPI{Bus: stm32.SPI1}
+	SPI1 = &SPI{Bus: stm32.SPI1}
 	SPI0 = SPI1
 )
 
-func (spi SPI) config8Bits() {
+func (spi *SPI) config8Bits() {
 	// no-op on this series
 }
 
 // Set baud rate for SPI
-func (spi SPI) getBaudRate(config SPIConfig) uint32 {
+func (spi *SPI) getBaudRate(config SPIConfig) uint32 {
 	var conf uint32
 
 	// set frequency dependent on PCLK2 prescaler (div 1)
@@ -368,7 +368,7 @@ func (spi SPI) getBaudRate(config SPIConfig) uint32 {
 }
 
 // Configure SPI pins for input output and clock
-func (spi SPI) configurePins(config SPIConfig) {
+func (spi *SPI) configurePins(config SPIConfig) {
 	config.SCK.Configure(PinConfig{Mode: PinOutput50MHz + PinOutputModeAltPushPull})
 	config.SDO.Configure(PinConfig{Mode: PinOutput50MHz + PinOutputModeAltPushPull})
 	config.SDI.Configure(PinConfig{Mode: PinInputModeFloating})

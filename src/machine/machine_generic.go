@@ -60,13 +60,13 @@ type SPIConfig struct {
 	Mode      uint8
 }
 
-func (spi SPI) Configure(config SPIConfig) error {
+func (spi *SPI) Configure(config SPIConfig) error {
 	spiConfigure(spi.Bus, config.SCK, config.SDO, config.SDI)
 	return nil
 }
 
 // Transfer writes/reads a single byte using the SPI interface.
-func (spi SPI) Transfer(w byte) (byte, error) {
+func (spi *SPI) Transfer(w byte) (byte, error) {
 	return spiTransfer(spi.Bus, w), nil
 }
 
@@ -87,7 +87,7 @@ func (spi SPI) Transfer(w byte) (byte, error) {
 // This form sends zeros, putting the result into the rx buffer. Good for reading a "result packet":
 //
 //	spi.Tx(nil, rx)
-func (spi SPI) Tx(w, r []byte) error {
+func (spi *SPI) Tx(w, r []byte) error {
 	var wptr, rptr *byte
 	var wlen, rlen int
 	if len(w) != 0 {

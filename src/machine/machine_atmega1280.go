@@ -927,7 +927,7 @@ func (pwm PWM) Set(channel uint8, value uint32) {
 }
 
 // SPI configuration
-var SPI0 = SPI{
+var SPI0 = &SPI{
 	spcr: avr.SPCR,
 	spdr: avr.SPDR,
 	spsr: avr.SPSR,

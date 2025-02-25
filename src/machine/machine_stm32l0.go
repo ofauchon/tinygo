@@ -234,12 +234,12 @@ type SPI struct {
 	AltFuncSelector uint8
 }
 
-func (spi SPI) config8Bits() {
+func (spi *SPI) config8Bits() {
 	// no-op on this series
 }
 
 // Set baud rate for SPI
-func (spi SPI) getBaudRate(config SPIConfig) uint32 {
+func (spi *SPI) getBaudRate(config SPIConfig) uint32 {
 	var conf uint32
 
 	localFrequency := config.Frequency
@@ -289,7 +289,7 @@ func (spi SPI) getBaudRate(config SPIConfig) uint32 {
 }
 
 // Configure SPI pins for input output and clock
-func (spi SPI) configurePins(config SPIConfig) {
+func (spi *SPI) configurePins(config SPIConfig) {
 	config.SCK.ConfigureAltFunc(PinConfig{Mode: PinModeSPICLK}, spi.AltFuncSelector)
 	config.SDO.ConfigureAltFunc(PinConfig{Mode: PinModeSPISDO}, spi.AltFuncSelector)
 	config.SDI.ConfigureAltFunc(PinConfig{Mode: PinModeSPISDI}, spi.AltFuncSelector)

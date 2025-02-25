@@ -354,7 +354,7 @@ type SPIConfig struct {
 }
 
 // Configure and make the SPI peripheral ready to use.
-func (spi SPI) Configure(config SPIConfig) error {
+func (spi *SPI) Configure(config SPIConfig) error {
 	if config.Frequency == 0 {
 		config.Frequency = 4e6 // default to 4MHz
 	}
@@ -445,7 +445,7 @@ func (spi SPI) Configure(config SPIConfig) error {
 
 // Transfer writes/reads a single byte using the SPI interface. If you need to
 // transfer larger amounts of data, Tx will be faster.
-func (spi SPI) Transfer(w byte) (byte, error) {
+func (spi *SPI) Transfer(w byte) (byte, error) {
 	spi.Bus.MISO_DLEN.Set(7 << esp.SPI_MISO_DLEN_USR_MISO_DBITLEN_Pos)
 	spi.Bus.MOSI_DLEN.Set(7 << esp.SPI_MOSI_DLEN_USR_MOSI_DBITLEN_Pos)
 
@@ -464,7 +464,7 @@ func (spi SPI) Transfer(w byte) (byte, error) {
 // interface, there must always be the same number of bytes written as bytes read.
 // This is accomplished by sending zero bits if r is bigger than w or discarding
 // the incoming data if w is bigger than r.
-func (spi SPI) Tx(w, r []byte) error {
+func (spi *SPI) Tx(w, r []byte) error {
 	toTransfer := len(w)
 	if len(r) > toTransfer {
 		toTransfer = len(r)

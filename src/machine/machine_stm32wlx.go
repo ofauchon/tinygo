@@ -235,19 +235,19 @@ type SPI struct {
 	AltFuncSelector uint8
 }
 
-func (spi SPI) config8Bits() {
+func (spi *SPI) config8Bits() {
 	// Set rx threshold to 8-bits, so RXNE flag is set for 1 byte
 	// (common STM32 SPI implementation does 8-bit transfers only)
 	spi.Bus.CR2.SetBits(stm32.SPI_CR2_FRXTH)
 }
 
-func (spi SPI) configurePins(config SPIConfig) {
+func (spi *SPI) configurePins(config SPIConfig) {
 	config.SCK.ConfigureAltFunc(PinConfig{Mode: PinModeSPICLK}, spi.AltFuncSelector)
 	config.SDO.ConfigureAltFunc(PinConfig{Mode: PinModeSPISDO}, spi.AltFuncSelector)
 	config.SDI.ConfigureAltFunc(PinConfig{Mode: PinModeSPISDI}, spi.AltFuncSelector)
 }
 
-func (spi SPI) getBaudRate(config SPIConfig) uint32 {
+func (spi *SPI) getBaudRate(config SPIConfig) uint32 {
 	var clock uint32
 
 	// We keep this switch and separate management of SPI Clocks

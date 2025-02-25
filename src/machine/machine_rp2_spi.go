@@ -10,12 +10,10 @@ import (
 
 // SPI on the RP2040
 var (
-	SPI0  = &_SPI0
-	_SPI0 = SPI{
+	SPI0 = &SPI{
 		Bus: rp.SPI0,
 	}
-	SPI1  = &_SPI1
-	_SPI1 = SPI{
+	SPI1 = &SPI{
 		Bus: rp.SPI1,
 	}
 )
@@ -73,7 +71,7 @@ type SPI struct {
 //
 // This form sends 0xff and puts the result into rx buffer. Useful for reading from SD cards
 // which require 0xff input on SI.
-func (spi SPI) Tx(w, r []byte) (err error) {
+func (spi *SPI) Tx(w, r []byte) (err error) {
 	switch {
 	case w == nil:
 		// read only, so write zero and read a result.
@@ -92,7 +90,7 @@ func (spi SPI) Tx(w, r []byte) (err error) {
 }
 
 // Write a single byte and read a single byte from TX/RX FIFO.
-func (spi SPI) Transfer(w byte) (byte, error) {
+func (spi *SPI) Transfer(w byte) (byte, error) {
 	for !spi.isWritable() {
 	}
 
@@ -103,7 +101,7 @@ func (spi SPI) Transfer(w byte) (byte, error) {
 	return uint8(spi.Bus.SSPDR.Get()), nil
 }
 
-func (spi SPI) SetBaudRate(br uint32) error {
+func (spi *SPI) SetBaudRate(br uint32) error {
 	const maxBaud uint32 = 66.5 * MHz // max output frequency is 66.5MHz on rp2040. see Note page 527.
 	// Find smallest prescale value which puts output frequency in range of
 	// post-divide. Prescale is an even number from 2 to 254 inclusive.
@@ -129,8 +127,8 @@ func (spi SPI) SetBaudRate(br uint32) error {
 	return nil
 }
 
-func (spi SPI) GetBaudRate() uint32 {
-	const freqin uint32 = 125 * MHz
+func (spi *SPI) GetBaudRate() uint32 {
+	freqin := CPUFrequency()
 	prescale := spi.Bus.SSPCPSR.Get()
 	postdiv := ((spi.Bus.SSPCR0.Get() & rp.SPI0_SSPCR0_SCR_Msk) >> rp.SPI0_SSPCR0_SCR_Pos) + 1
 	return freqin / (prescale * postdiv)
@@ -152,7 +150,7 @@ func (spi SPI) GetBaudRate() uint32 {
 //	SCK: 10, 14
 //
 // No pin configuration is needed of SCK, SDO and SDI needed after calling Configure.
-func (spi SPI) Configure(config SPIConfig) error {
+func (spi *SPI) Configure(config SPIConfig) error {
 	const defaultBaud uint32 = 4 * MHz
 	if config.SCK == 0 && config.SDO == 0 && config.SDI == 0 {
 		// set default pins if config zero valued or invalid clock pin supplied.
@@ -199,7 +197,7 @@ func (spi SPI) Configure(config SPIConfig) error {
 	return spi.initSPI(config)
 }
 
-func (spi SPI) initSPI(config SPIConfig) (err error) {
+func (spi *SPI) initSPI(config SPIConfig) (err error) {
 	spi.reset()
 	// LSB-first not supported on PL022:
 	if config.LSBFirst {
@@ -217,7 +215,7 @@ func (spi SPI) initSPI(config SPIConfig) (err error) {
 }
 
 //go:inline
-func (spi SPI) setFormat(mode uint8) {
+func (spi *SPI) setFormat(mode uint8) {
 	cpha := uint32(mode) & 1
 	cpol := uint32(mode>>1) & 1
 	spi.Bus.SSPCR0.ReplaceBits(
@@ -230,7 +228,7 @@ func (spi SPI) setFormat(mode uint8) {
 // reset resets SPI and waits until reset is done.
 //
 //go:inline
-func (spi SPI) reset() {
+func (spi *SPI) reset() {
 	resetVal := spi.deinit()
 	rp.RESETS.RESET.ClearBits(resetVal)
 	// Wait until reset is done.
@@ -239,7 +237,7 @@ func (spi SPI) reset() {
 }
 
 //go:inline
-func (spi SPI) deinit() (resetVal uint32) {
+func (spi *SPI) deinit() (resetVal uint32) {
 	switch spi.Bus {
 	case rp.SPI0:
 		resetVal = rp.RESETS_RESET_SPI0
@@ -254,19 +252,19 @@ func (spi SPI) deinit() (resetVal uint32) {
 // isWritable returns false if no space is available to write. True if a write is possible
 //
 //go:inline
-func (spi SPI) isWritable() bool {
+func (spi *SPI) isWritable() bool {
 	return spi.Bus.SSPSR.HasBits(rp.SPI0_SSPSR_TNF)
 }
 
 // isReadable returns true if a read is possible i.e. data is present
 //
 //go:inline
-func (spi SPI) isReadable() bool {
+func (spi *SPI) isReadable() bool {
 	return spi.Bus.SSPSR.HasBits(rp.SPI0_SSPSR_RNE)
 }
 
 // PrintRegs prints SPI's peripheral common registries current values
-func (spi SPI) PrintRegs() {
+func (spi *SPI) PrintRegs() {
 	cr0 := spi.Bus.SSPCR0.Get()
 	cr1 := spi.Bus.SSPCR1.Get()
 	dmacr := spi.Bus.SSPDMACR.Get()
@@ -282,12 +280,12 @@ func (spi SPI) PrintRegs() {
 }
 
 //go:inline
-func (spi SPI) isBusy() bool {
+func (spi *SPI) isBusy() bool {
 	return spi.Bus.SSPSR.HasBits(rp.SPI0_SSPSR_BSY)
 }
 
 // tx writes buffer to SPI ignoring Rx.
-func (spi SPI) tx(tx []byte) error {
+func (spi *SPI) tx(tx []byte) error {
 	if len(tx) == 0 {
 		// We don't have to do anything.
 		// This avoids a panic in &tx[0] when len(tx) == 0.
@@ -352,7 +350,7 @@ func (spi SPI) tx(tx []byte) error {
 // txrepeat is output repeatedly on SO as data is read in from SI.
 // Generally this can be 0, but some devices require a specific value here,
 // e.g. SD cards expect 0xff
-func (spi SPI) rx(rx []byte, txrepeat byte) error {
+func (spi *SPI) rx(rx []byte, txrepeat byte) error {
 	plen := len(rx)
 	const fifoDepth = 8 // see txrx
 	var rxleft, txleft = plen, plen
@@ -375,7 +373,7 @@ func (spi SPI) rx(rx []byte, txrepeat byte) error {
 
 // Write len bytes from src to SPI. Simultaneously read len bytes from SPI to dst.
 // Note this function is guaranteed to exit in a known amount of time (bits sent * time per bit)
-func (spi SPI) txrx(tx, rx []byte) error {
+func (spi *SPI) txrx(tx, rx []byte) error {
 	plen := len(tx)
 	if plen != len(rx) {
 		return ErrTxInvalidSliceSize
