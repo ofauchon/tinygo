@@ -111,7 +111,7 @@ var errVCOOverflow = errors.New("VCO calculation overflow; use lower MHz")
 //
 // Example for 12MHz crystal and RP2350:
 //
-//	fbdiv, refdiv, pd1, pd2, _ := pllSearch{LockRefDiv:1}.CalcDivs(12*MHz, 133*MHz, MHz)
+//	fbdiv, refdiv, pd1, pd2, _ := pllSearch{LockRefDiv:1}.CalcDivs(12*MHz, 150*MHz, MHz)
 type pllSearch struct {
 	LowerVCO   bool
 	LockRefDiv uint8

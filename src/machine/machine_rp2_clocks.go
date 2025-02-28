@@ -137,7 +137,19 @@ func (clk *clock) configure(src, auxsrc, srcFreq, freq uint32) {
 
 }
 
-const pllsysFB, pllsysPD1, pllsysPD2 uint32 = 125, 6, 2 // RP2040 running 125MHz with 1500MHz VCO.
+var pllsysFB, pllsysPD1, pllsysPD2 uint32
+
+// Compute clock dividers.
+//
+// Note that the entire init function is computed at compile time
+// by interp.
+func init() {
+	fb, _, pd1, pd2, err := pllSearch{LockRefDiv: 1}.CalcDivs(xoscFreq*MHz, uint64(CPUFrequency()), MHz)
+	if err != nil {
+		panic(err)
+	}
+	pllsysFB, pllsysPD1, pllsysPD2 = uint32(fb), uint32(pd1), uint32(pd2)
+}
 
 // init initializes the clock hardware.
 //
@@ -165,7 +177,7 @@ func (clks *clocksType) init() {
 	//                   REF     FBDIV VCO            POSTDIV
 	// pllSys: 12 / 1 = 12MHz * 125 = 1500MHZ / 6 / 2 = 125MHz
 	// pllUSB: 12 / 1 = 12MHz * 40  = 480 MHz / 5 / 2 =  48MHz
-	pllSys.init(1, uint32(pllsysFB), uint32(pllsysPD1), uint32(pllsysPD2))
+	pllSys.init(1, pllsysFB, pllsysPD1, pllsysPD2)
 	pllUSB.init(1, 40, 5, 2)
 
 	// Configure clocks
