@@ -321,6 +321,7 @@
 
 					// func stringVal(value string) ref
 					"syscall/js.stringVal": (value_ptr, value_len) => {
+						value_ptr >>>= 0;
 						const s = loadString(value_ptr, value_len);
 						return boxValue(s);
 					},
