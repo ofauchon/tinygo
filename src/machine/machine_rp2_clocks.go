@@ -10,7 +10,7 @@ import (
 )
 
 func CPUFrequency() uint32 {
-	return 125 * MHz
+	return cpuFreq
 }
 
 // clockIndex identifies a hardware clock

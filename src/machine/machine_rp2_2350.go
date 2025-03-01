@@ -9,6 +9,7 @@ import (
 )
 
 const (
+	cpuFreq          = 150 * MHz
 	_NUMBANK0_GPIOS  = 48
 	_NUMBANK0_IRQS   = 6
 	rp2350ExtraReg   = 1
