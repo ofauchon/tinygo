@@ -1,3 +1,72 @@
+0.36.0
+---
+* **general**
+  - add initial Go 1.24 support
+  - add support for LLVM 19
+  - update license for 2025
+  - make small corrections for README regarding wasm
+  - use GOOS and GOARCH for building wasm simulated boards
+  - only infer target for wasm when GOOS and GOARCH are set correctly, not just based on file extension
+  - add test-corpus-wasip2
+  - use older image for cross-compiling builds
+  - update Linux builds to run on ubuntu-latest since 20.04 is being retired
+  - ensure build output directory is created
+  - add NoSandbox flag to chrome headless that is run during WASM tests, since this is now required for Ubuntu 23+ and we are using Ubuntu 24+ when running Github Actions
+  - update wasmtime used for CI to 29.0.1 to fix issue with install during CI tests
+  - update to use `Get-CimInstance` as `wmic` is being deprecated on WIndows
+  - remove unnecessary executable permissions
+  - `goenv`: update to new v0.36.0 development version
+* **compiler**
+  - `builder`: fix parsing of external ld.lld error messages
+  - `cgo`: mangle identifier names
+  - `interp`: correctly mark functions as modifying memory
+  - add buildmode=wasi-legacy to support existing base of users who expected the older behavior for wasi modules to not return an exit code as if they were reactors
+* **standard library**
+  - `crypto/tls`: add Dialer.DialContext() to fix websocket client
+  - `crypto/tls`: add VersionTLS constants and VersionName(version uint16) method that turns it into a string, copied from big go
+  - `internal/syscall/unix`: use our own version of this package
+  - `machine`: replace hard-coded cpu frequencies on rp2xxx
+  - `machine`: bump rp2350 CPUFrequency to 150 MHz
+  - `machine`: compute rp2 clock dividers from crystal and target frequency
+  - `machine`: remove bytes package dependency in flash code
+  - `machine/usb/descriptor`: avoid bytes package
+  - `net`: update to latest submodule with httptest subpackage and ResolveIPAddress implementation
+  - `os`: add File.Chdir support
+  - `os`: implement stub Chdir for non-OS systems
+  - `os/file`: add file.Chmod
+  - `reflect`: implement Value.Equal
+  - `runtime`: add FIPS helper functions
+  - `runtime`: manually initialize xorshift state
+  - `sync`: move Mutex to internal/task
+  - `syscall`: add wasip1 RandomGet
+  - `testing`: add Chdir
+  - `wasip2`: add stubs to get internal/syscall/unix to work
+* **fixes**
+  - correctly handle calls for GetRNG() when being made from nrf devices with SoftDevice enabled
+  - fix stm32f103 ADC
+  - `wasm`: correctly handle id lookup for finalizeRef call
+  - `wasm`: avoid total failure on wasm finalizer call
+  - `wasm`: convert offset as signed int into unsigned int in syscall/js.stringVal in wasm_exec.js
+* **targets**
+  - rp2350: add pll generalized solution; fix ADC handles; pwm period fix
+  - rp2350: extending support to include the rp2350b
+  - rp2350: cleanup: unexport internal USB and clock package variable, consts and types
+  - nrf: make ADC resolution changeable
+  - turn on GC for TKey1 device, since it does in fact work
+  - match Pico2 stack size to Pico
+* **boards**
+  - add support for Pimoroni Pico Plus2
+  - add target for pico2-w board
+  - add comboat_fw tag for elecrow W5 boards with Combo-AT Wifi firmware
+  - add support for Elecrow Pico rp2350 W5 boards
+  - add support for Elecrow Pico rp2040 W5 boards
+  - add support for NRF51 HW-651
+  - add support for esp32c3-supermini
+  - add support for waveshare-rp2040-tiny
+* **examples**
+  - add naive debouncing for pininterrupt example
+
+
 0.35.0
 ---
 * **general**
