@@ -67,7 +67,7 @@ func (uart *UART) Configure(config UARTConfig) error {
 	uart.Interrupt.SetPriority(0x80)
 	uart.Interrupt.Enable()
 
-	// setup interrupt on receive
+	// Setup interrupt on receive.
 	uart.Bus.UARTIMSC.Set(rp.UART0_UARTIMSC_RXIM)
 
 	return nil
@@ -153,7 +153,7 @@ func initUART(uart *UART) {
 // handleInterrupt should be called from the appropriate interrupt handler for
 // this UART instance.
 func (uart *UART) handleInterrupt(interrupt.Interrupt) {
-	for uart.Bus.UARTFR.HasBits(rp.UART0_UARTFR_RXFE) {
+	for !uart.Bus.UARTFR.HasBits(rp.UART0_UARTFR_RXFE) {
+		uart.Receive(byte((uart.Bus.UARTDR.Get() & 0xFF)))
 	}
-	uart.Receive(byte((uart.Bus.UARTDR.Get() & 0xFF)))
 }
