@@ -104,13 +104,13 @@ func (spi SPI) Transfer(w byte) (byte, error) {
 }
 
 func (spi SPI) SetBaudRate(br uint32) error {
-	const freqin uint32 = 125 * MHz
 	const maxBaud uint32 = 66.5 * MHz // max output frequency is 66.5MHz on rp2040. see Note page 527.
 	// Find smallest prescale value which puts output frequency in range of
 	// post-divide. Prescale is an even number from 2 to 254 inclusive.
 	var prescale, postdiv uint32
+	freq := CPUFrequency()
 	for prescale = 2; prescale < 255; prescale += 2 {
-		if freqin < (prescale+2)*256*br {
+		if freq < (prescale+2)*256*br {
 			break
 		}
 	}
@@ -120,7 +120,7 @@ func (spi SPI) SetBaudRate(br uint32) error {
 	// Find largest post-divide which makes output <= baudrate. Post-divide is
 	// an integer in the range 1 to 256 inclusive.
 	for postdiv = 256; postdiv > 1; postdiv-- {
-		if freqin/(prescale*(postdiv-1)) > br {
+		if freq/(prescale*(postdiv-1)) > br {
 			break
 		}
 	}

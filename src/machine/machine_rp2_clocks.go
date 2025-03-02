@@ -144,7 +144,7 @@ var pllsysFB, pllsysPD1, pllsysPD2 uint32
 // Note that the entire init function is computed at compile time
 // by interp.
 func init() {
-	fb, _, pd1, pd2, err := pllSearch{LockRefDiv: 1}.CalcDivs(xoscFreq*MHz, uint64(CPUFrequency()), MHz)
+	fb, _, pd1, pd2, err := pllSearch{LockRefDiv: 1}.CalcDivs(xoscFreq*MHz, cpuFreq, MHz)
 	if err != nil {
 		panic(err)
 	}
@@ -185,15 +185,15 @@ func (clks *clocksType) init() {
 	cref := clks.clock(clkRef)
 	cref.configure(rp.CLOCKS_CLK_REF_CTRL_SRC_XOSC_CLKSRC,
 		0, // No aux mux
-		12*MHz,
-		12*MHz)
+		xoscFreq,
+		xoscFreq)
 
 	// clkSys = pllSys (125MHz) / 1 = 125MHz
 	csys := clks.clock(clkSys)
 	csys.configure(rp.CLOCKS_CLK_SYS_CTRL_SRC_CLKSRC_CLK_SYS_AUX,
 		rp.CLOCKS_CLK_SYS_CTRL_AUXSRC_CLKSRC_PLL_SYS,
-		125*MHz,
-		125*MHz)
+		cpuFreq,
+		cpuFreq)
 
 	// clkUSB = pllUSB (48MHz) / 1 = 48MHz
 	cusb := clks.clock(clkUSB)
@@ -217,8 +217,8 @@ func (clks *clocksType) init() {
 	cperi := clks.clock(clkPeri)
 	cperi.configure(0,
 		rp.CLOCKS_CLK_PERI_CTRL_AUXSRC_CLK_SYS,
-		125*MHz,
-		125*MHz)
+		cpuFreq,
+		cpuFreq)
 
 	clks.initTicks()
 }
