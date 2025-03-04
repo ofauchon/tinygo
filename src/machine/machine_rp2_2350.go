@@ -222,3 +222,7 @@ func EnterBootloader() {
 func (wd *watchdogImpl) startTick(cycles uint32) {
 	rp.TICKS.WATCHDOG_CTRL.SetBits(1)
 }
+
+func adjustCoreVoltage() bool {
+	return false
+}

@@ -42,6 +42,10 @@ type clock struct {
 	cix clockIndex
 }
 
+// The delay in seconds for core voltage adjustments to
+// settle. Taken from the Pico SDK.
+const _VREG_VOLTAGE_AUTO_ADJUST_DELAY = 1 / 1e3
+
 // clock returns the clock identified by cix.
 func (clks *clocksType) clock(cix clockIndex) clock {
 	return clock{
@@ -187,6 +191,14 @@ func (clks *clocksType) init() {
 		0, // No aux mux
 		xoscFreq,
 		xoscFreq)
+
+	if adjustCoreVoltage() {
+		// Wait for the voltage to settle.
+		const cycles = _VREG_VOLTAGE_AUTO_ADJUST_DELAY * xoscFreq * MHz
+		for i := 0; i < cycles; i++ {
+			arm.Asm("nop")
+		}
+	}
 
 	// clkSys = pllSys (125MHz) / 1 = 125MHz
 	csys := clks.clock(clkSys)
