@@ -165,6 +165,7 @@ jobs:
           ln -s ~/lib/tinygo/bin/tinygo ~/go/bin/tinygo
       - run: make tinygo-test-wasip1-fast
       - run: make tinygo-test-wasip2-fast
+      - run: make tinygo-test-wasm
       - run: make smoketest
   assert-test-linux:
     # Run all tests that can run on Linux, with LLVM assertions enabled to catch

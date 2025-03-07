@@ -407,6 +407,9 @@ TEST_PACKAGES_WINDOWS := \
 	text/template/parse \
 	$(nil)
 
+TEST_PACKAGES_WASM := \
+	crypto/sha256
+
 # Report platforms on which each standard library package is known to pass tests
 jointmp := $(shell echo /tmp/join.$$$$)
 report-stdlib-tests-pass:
@@ -450,6 +453,8 @@ tinygo-bench-fast:
 	$(TINYGO) test -bench . $(TEST_PACKAGES_HOST)
 
 # Same thing, except for wasi rather than the current platform.
+tinygo-test-wasm:
+	$(TINYGO) test -target wasm $(TEST_PACKAGES_WASM)
 tinygo-test-wasi:
 	$(TINYGO) test -target wasip1 $(TEST_PACKAGES_FAST) $(TEST_PACKAGES_SLOW) ./tests/runtime_wasi
 tinygo-test-wasip1:
