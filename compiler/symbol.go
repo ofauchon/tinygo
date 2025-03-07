@@ -446,7 +446,7 @@ func (c *compilerContext) parsePragmas(info *functionInfo, f *ssa.Function) {
 // The list of allowed types is based on this proposal:
 // https://github.com/golang/go/issues/59149
 func (c *compilerContext) checkWasmImportExport(f *ssa.Function, pragma string) {
-	if c.pkg.Path() == "runtime" || c.pkg.Path() == "syscall/js" || c.pkg.Path() == "syscall" {
+	if c.pkg.Path() == "runtime" || c.pkg.Path() == "syscall/js" || c.pkg.Path() == "syscall" || c.pkg.Path() == "crypto/internal/sysrand" {
 		// The runtime is a special case. Allow all kinds of parameters
 		// (importantly, including pointers).
 		return
