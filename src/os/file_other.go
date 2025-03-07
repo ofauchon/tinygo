@@ -134,6 +134,10 @@ func Pipe() (r *File, w *File, err error) {
 	return nil, nil, ErrNotImplemented
 }
 
+func Symlink(oldname, newname string) error {
+	return ErrNotImplemented
+}
+
 func Readlink(name string) (string, error) {
 	return "", ErrNotImplemented
 }
