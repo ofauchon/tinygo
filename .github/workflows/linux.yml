@@ -278,7 +278,7 @@ jobs:
         run: make tinygo-test
       - run: make smoketest
       - run: make wasmtest
-      - run: make tinygo-baremetal
+      - run: make tinygo-test-baremetal
   build-linux-cross:
     # Build ARM Linux binaries, ready for release.
     # This intentionally uses an older Linux image, so that we compile against

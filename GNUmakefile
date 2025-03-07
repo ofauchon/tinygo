@@ -407,8 +407,45 @@ TEST_PACKAGES_WINDOWS := \
 	text/template/parse \
 	$(nil)
 
-TEST_PACKAGES_WASM := \
-	crypto/sha256
+
+# These packages cannot be tested on wasm, mostly because these tests assume a
+# working filesystem. This could perhaps be fixed, by supporting filesystem
+# access when running inside Node.js.
+TEST_PACKAGES_WASM = $(filter-out $(TEST_PACKAGES_NONWASM), $(TEST_PACKAGES_FAST))
+TEST_PACKAGES_NONWASM = \
+	compress/lzw \
+	compress/zlib \
+	crypto/ecdsa \
+	debug/macho \
+	embed/internal/embedtest \
+	go/format \
+	os \
+	testing \
+	$(nil)
+
+# These packages cannot be tested on baremetal.
+#
+# Some reasons why the tests don't pass on baremetal:
+#
+#   * No filesystem is available, so packages like compress/zlib can't be tested
+#     (just like wasm).
+#   * There is no RNG implemented (TODO, I think this is fixable).
+#   * picolibc math functions apparently are less precise, the math package
+#     fails on baremetal.
+#   * Some packages fail or hang for an unknown reason, this should be
+#     investigated and fixed.
+TEST_PACKAGES_BAREMETAL = $(filter-out $(TEST_PACKAGES_NONBAREMETAL), $(TEST_PACKAGES_FAST))
+TEST_PACKAGES_NONBAREMETAL = \
+	$(TEST_PACKAGES_NONWASM) \
+	crypto/elliptic \
+	crypto/md5 \
+	crypto/sha1 \
+	math \
+	reflect \
+	encoding/asn1 \
+	encoding/base32 \
+	go/ast \
+	$(nil)
 
 # Report platforms on which each standard library package is known to pass tests
 jointmp := $(shell echo /tmp/join.$$$$)
@@ -489,6 +526,10 @@ tinygo-bench-wasip2:
 tinygo-bench-wasip2-fast:
 	$(TINYGO) test -target wasip2 -bench . $(TEST_PACKAGES_FAST)
 
+# Run tests on riscv-qemu since that one provides a large amount of memory.
+tinygo-test-baremetal:
+	$(TINYGO) test -target riscv-qemu $(TEST_PACKAGES_BAREMETAL)
+
 # Test external packages in a large corpus.
 test-corpus:
 	CGO_CPPFLAGS="$(CGO_CPPFLAGS)" CGO_CXXFLAGS="$(CGO_CXXFLAGS)" CGO_LDFLAGS="$(CGO_LDFLAGS)" $(GO) test $(GOTESTFLAGS) -timeout=1h -buildmode exe -tags byollvm -run TestCorpus . -corpus=testdata/corpus.yaml
@@ -498,11 +539,6 @@ test-corpus-wasi: wasi-libc
 	CGO_CPPFLAGS="$(CGO_CPPFLAGS)" CGO_CXXFLAGS="$(CGO_CXXFLAGS)" CGO_LDFLAGS="$(CGO_LDFLAGS)" $(GO) test $(GOTESTFLAGS) -timeout=1h -buildmode exe -tags byollvm -run TestCorpus . -corpus=testdata/corpus.yaml -target=wasip1
 test-corpus-wasip2: wasi-libc
 	CGO_CPPFLAGS="$(CGO_CPPFLAGS)" CGO_CXXFLAGS="$(CGO_CXXFLAGS)" CGO_LDFLAGS="$(CGO_LDFLAGS)" $(GO) test $(GOTESTFLAGS) -timeout=1h -buildmode exe -tags byollvm -run TestCorpus . -corpus=testdata/corpus.yaml -target=wasip2
-
-tinygo-baremetal:
-	# Regression tests that run on a baremetal target and don't fit in either main_test.go or smoketest.
-	# regression test for #2666: e.g. encoding/hex must pass on baremetal
-	$(TINYGO) test -target cortex-m-qemu encoding/hex
 
 .PHONY: testchdir
 testchdir:
