@@ -1,3 +1,5 @@
+//go:build never
+
 package reflectlite
 
 import "reflect"

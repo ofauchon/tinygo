@@ -4,7 +4,7 @@
 
 // Deep equality test via reflection
 
-package reflect
+package reflectlite
 
 import "unsafe"
 
@@ -15,7 +15,7 @@ import "unsafe"
 type visit struct {
 	a1  unsafe.Pointer
 	a2  unsafe.Pointer
-	typ *rawType
+	typ *RawType
 }
 
 // Tests for deep equality using reflected types. The map argument tracks

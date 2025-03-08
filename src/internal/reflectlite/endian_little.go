@@ -1,6 +1,6 @@
 //go:build !mips
 
-package reflect
+package reflectlite
 
 import "unsafe"
 
