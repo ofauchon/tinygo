@@ -6,7 +6,7 @@ package runtime
 //     https://golang.org/src/runtime/map.go
 
 import (
-	"reflect"
+	"internal/reflectlite"
 	"tinygo"
 	"unsafe"
 )
@@ -539,8 +539,8 @@ func hashmapStringDelete(m *hashmap, key string) {
 // a field is exported and thus allows circumventing the type system.
 // The hash function needs it as it also needs to hash unexported struct fields.
 //
-//go:linkname valueInterfaceUnsafe reflect.valueInterfaceUnsafe
-func valueInterfaceUnsafe(v reflect.Value) interface{}
+//go:linkname valueInterfaceUnsafe internal/reflectlite.valueInterfaceUnsafe
+func valueInterfaceUnsafe(v reflectlite.Value) interface{}
 
 func hashmapFloat32Hash(ptr unsafe.Pointer, seed uintptr) uint32 {
 	f := *(*uint32)(ptr)
@@ -561,7 +561,7 @@ func hashmapFloat64Hash(ptr unsafe.Pointer, seed uintptr) uint32 {
 }
 
 func hashmapInterfaceHash(itf interface{}, seed uintptr) uint32 {
-	x := reflect.ValueOf(itf)
+	x := reflectlite.ValueOf(itf)
 	if x.RawType() == nil {
 		return 0 // nil interface
 	}
@@ -574,39 +574,39 @@ func hashmapInterfaceHash(itf interface{}, seed uintptr) uint32 {
 	}
 
 	switch x.RawType().Kind() {
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+	case reflectlite.Int, reflectlite.Int8, reflectlite.Int16, reflectlite.Int32, reflectlite.Int64:
 		return hash32(ptr, x.RawType().Size(), seed)
-	case reflect.Bool, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+	case reflectlite.Bool, reflectlite.Uint, reflectlite.Uint8, reflectlite.Uint16, reflectlite.Uint32, reflectlite.Uint64, reflectlite.Uintptr:
 		return hash32(ptr, x.RawType().Size(), seed)
-	case reflect.Float32:
+	case reflectlite.Float32:
 		// It should be possible to just has the contents. However, NaN != NaN
 		// so if you're using lots of NaNs as map keys (you shouldn't) then hash
 		// time may become exponential. To fix that, it would be better to
 		// return a random number instead:
 		// https://research.swtch.com/randhash
 		return hashmapFloat32Hash(ptr, seed)
-	case reflect.Float64:
+	case reflectlite.Float64:
 		return hashmapFloat64Hash(ptr, seed)
-	case reflect.Complex64:
+	case reflectlite.Complex64:
 		rptr, iptr := ptr, unsafe.Add(ptr, 4)
 		return hashmapFloat32Hash(rptr, seed) ^ hashmapFloat32Hash(iptr, seed)
-	case reflect.Complex128:
+	case reflectlite.Complex128:
 		rptr, iptr := ptr, unsafe.Add(ptr, 8)
 		return hashmapFloat64Hash(rptr, seed) ^ hashmapFloat64Hash(iptr, seed)
-	case reflect.String:
+	case reflectlite.String:
 		return hashmapStringHash(x.String(), seed)
-	case reflect.Chan, reflect.Ptr, reflect.UnsafePointer:
+	case reflectlite.Chan, reflectlite.Ptr, reflectlite.UnsafePointer:
 		// It might seem better to just return the pointer, but that won't
 		// result in an evenly distributed hashmap. Instead, hash the pointer
 		// like most other types.
 		return hash32(ptr, x.RawType().Size(), seed)
-	case reflect.Array:
+	case reflectlite.Array:
 		var hash uint32
 		for i := 0; i < x.Len(); i++ {
 			hash ^= hashmapInterfaceHash(valueInterfaceUnsafe(x.Index(i)), seed)
 		}
 		return hash
-	case reflect.Struct:
+	case reflectlite.Struct:
 		var hash uint32
 		for i := 0; i < x.NumField(); i++ {
 			hash ^= hashmapInterfaceHash(valueInterfaceUnsafe(x.Field(i)), seed)
