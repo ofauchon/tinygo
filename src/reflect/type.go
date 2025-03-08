@@ -342,6 +342,9 @@ type rawType struct {
 }
 
 func toType(t reflectlite.Type) Type {
+	if t == nil {
+		return nil
+	}
 	return (*rawType)(unsafe.Pointer(t.(*reflectlite.RawType)))
 }
 
@@ -395,6 +398,30 @@ func (t *rawType) ConvertibleTo(u Type) bool {
 	panic("unimplemented: (reflect.Type).ConvertibleTo()")
 }
 
+func (t *rawType) Elem() Type {
+	return toType(t.RawType.Elem())
+}
+
+func (t *rawType) Field(i int) StructField {
+	f := t.RawType.Field(i)
+	return toStructField(f)
+}
+
+func (t *rawType) FieldByIndex(index []int) StructField {
+	f := t.RawType.FieldByIndex(index)
+	return toStructField(f)
+}
+
+func (t *rawType) FieldByName(name string) (StructField, bool) {
+	f, ok := t.RawType.FieldByName(name)
+	return toStructField(f), ok
+}
+
+func (t *rawType) FieldByNameFunc(match func(string) bool) (StructField, bool) {
+	f, ok := t.RawType.FieldByNameFunc(match)
+	return toStructField(f), ok
+}
+
 func (t *rawType) Implements(u Type) bool {
 	return t.RawType.Implements(&(u.(*rawType).RawType))
 }
@@ -431,11 +458,41 @@ func (t *rawType) Out(i int) Type {
 	panic("unimplemented: (reflect.Type).Out()")
 }
 
-func (t *rawType) Elem() Type {
-	return toType(t.RawType.Elem())
+// A StructField describes a single field in a struct.
+// This must be kept in sync with [reflectlite.StructField].
+type StructField struct {
+	// Name indicates the field name.
+	Name string
+
+	// PkgPath is the package path where the struct containing this field is
+	// declared for unexported fields, or the empty string for exported fields.
+	PkgPath string
+
+	Type      Type
+	Tag       StructTag // field tag string
+	Offset    uintptr
+	Index     []int // index sequence for Type.FieldByIndex
+	Anonymous bool
 }
 
-type StructField = reflectlite.StructField
+func toStructField(f reflectlite.StructField) StructField {
+	return StructField{
+		Name:      f.Name,
+		PkgPath:   f.PkgPath,
+		Type:      toType(f.Type),
+		Tag:       f.Tag,
+		Offset:    f.Offset,
+		Index:     f.Index,
+		Anonymous: f.Anonymous,
+	}
+}
+
+// IsExported reports whether the field is exported.
+func (f StructField) IsExported() bool {
+	return f.PkgPath == ""
+}
+
+type StructTag = reflectlite.StructTag
 
 func TypeFor[T any]() Type {
 	return toType(reflectlite.TypeFor[T]())

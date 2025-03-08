@@ -294,7 +294,6 @@ func (t *RawType) String() string {
 		}
 		return s
 	}
-
 	switch t.Kind() {
 	case Chan:
 		elem := t.elem().String()
@@ -977,6 +976,7 @@ func (t *RawType) FieldByIndex(index []int) StructField {
 }
 
 // A StructField describes a single field in a struct.
+// This must be kept in sync with [reflect.StructField].
 type StructField struct {
 	// Name indicates the field name.
 	Name string
