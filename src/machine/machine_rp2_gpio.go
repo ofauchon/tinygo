@@ -33,6 +33,7 @@ type irqSummary struct {
 
 type ioBank0Type struct {
 	io                 [_NUMBANK0_GPIOS]ioType
+	_                  [rp2350ExtraReg][128]byte
 	irqsum             [rp2350ExtraReg]irqSummary
 	intR               [_NUMBANK0_IRQS]volatile.Register32
 	proc0IRQctrl       irqCtrl
