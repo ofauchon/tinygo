@@ -117,8 +117,9 @@ func OptimizeStringEqual(mod llvm.Module) {
 // As of this writing, the (reflect.Type).Interface method has not yet been
 // implemented so this optimization is critical for the encoding/json package.
 func OptimizeReflectImplements(mod llvm.Module) {
-	implementsSignature := mod.NamedGlobal("reflect/methods.Implements(reflect.Type) bool")
-	if implementsSignature.IsNil() {
+	implementsSignature1 := mod.NamedGlobal("reflect/methods.Implements(reflect.Type) bool")
+	implementsSignature2 := mod.NamedGlobal("reflect/methods.Implements(internal/reflectlite.Type) bool")
+	if implementsSignature1.IsNil() && implementsSignature2.IsNil() {
 		return
 	}
 
@@ -132,7 +133,8 @@ func OptimizeReflectImplements(mod llvm.Module) {
 		if attr.IsNil() {
 			continue
 		}
-		if attr.GetStringValue() == "reflect/methods.Implements(reflect.Type) bool" {
+		val := attr.GetStringValue()
+		if val == "reflect/methods.Implements(reflect.Type) bool" || val == "reflect/methods.Implements(internal/reflectlite.Type) bool" {
 			implementsFunc = fn
 			break
 		}
