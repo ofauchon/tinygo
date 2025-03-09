@@ -197,10 +197,11 @@ func TestValueSeq(t *testing.T) {
 					t.Fatalf("got %d, want %d", v.Int(), i)
 				}
 				i++
-				// TODO: iteration should produce the same type
-				// if v.Type() != reflect.TypeOf(i) {
-				// 	t.Fatalf("got %s, want %s", v.Type(), reflect.TypeOf(i))
-				// }
+				if v.Type() != reflect.TypeOf(i) {
+					j := ValueOf(i)
+					t.Logf("ValueOf(j): %s", j.Type())
+					t.Fatalf("got %s, want %s", v.Type(), reflect.TypeOf(i))
+				}
 			}
 			if i != 4 {
 				t.Fatalf("should loop four times")
