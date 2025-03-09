@@ -226,3 +226,24 @@ func (v Value) Recv() (x Value, ok bool) {
 func NewAt(typ Type, p unsafe.Pointer) Value {
 	panic("unimplemented: reflect.New()")
 }
+
+// Deprecated: Use unsafe.Slice or unsafe.SliceData instead.
+type SliceHeader struct {
+	Data uintptr
+	Len  intw
+	Cap  intw
+}
+
+// Deprecated: Use unsafe.String or unsafe.StringData instead.
+type StringHeader struct {
+	Data uintptr
+	Len  intw
+}
+
+// Verify SliceHeader and StringHeader sizes.
+// See https://github.com/tinygo-org/tinygo/pull/4156
+// and https://github.com/tinygo-org/tinygo/issues/1284.
+var (
+	_ [unsafe.Sizeof([]byte{})]byte = [unsafe.Sizeof(SliceHeader{})]byte{}
+	_ [unsafe.Sizeof("")]byte       = [unsafe.Sizeof(StringHeader{})]byte{}
+)

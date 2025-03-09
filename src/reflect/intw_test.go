@@ -1,6 +1,6 @@
 //go:build !avr
 
-package reflectlite_test
+package reflect_test
 
 import (
 	"reflect"

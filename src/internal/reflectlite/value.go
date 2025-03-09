@@ -1686,23 +1686,12 @@ type funcHeader struct {
 	Code    unsafe.Pointer
 }
 
-type SliceHeader struct {
-	Data uintptr
-	Len  intw
-	Cap  intw
-}
-
 // Slice header that matches the underlying structure. Used for when we switch
 // to a precise GC, which needs to know exactly where pointers live.
 type sliceHeader struct {
 	data unsafe.Pointer
 	len  uintptr
 	cap  uintptr
-}
-
-type StringHeader struct {
-	Data uintptr
-	Len  intw
 }
 
 // Like sliceHeader, this type is used internally to make sure pointer and
@@ -1716,9 +1705,7 @@ type stringHeader struct {
 // See https://github.com/tinygo-org/tinygo/pull/4156
 // and https://github.com/tinygo-org/tinygo/issues/1284.
 var (
-	_ [unsafe.Sizeof([]byte{})]byte = [unsafe.Sizeof(SliceHeader{})]byte{}
 	_ [unsafe.Sizeof([]byte{})]byte = [unsafe.Sizeof(sliceHeader{})]byte{}
-	_ [unsafe.Sizeof("")]byte       = [unsafe.Sizeof(StringHeader{})]byte{}
 	_ [unsafe.Sizeof("")]byte       = [unsafe.Sizeof(stringHeader{})]byte{}
 )
 
