@@ -261,6 +261,10 @@ func pathsToOverride(goMinor int, needsSyscallPackage bool) map[string]bool {
 		"unique/":                     false,
 	}
 
+	if goMinor <= 22 {
+		paths["iter]"] = false
+	}
+
 	if goMinor >= 19 {
 		paths["crypto/internal/"] = true
 		paths["crypto/internal/boring/"] = true
