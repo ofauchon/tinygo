@@ -429,7 +429,6 @@ TEST_PACKAGES_NONWASM = \
 #
 #   * No filesystem is available, so packages like compress/zlib can't be tested
 #     (just like wasm).
-#   * There is no RNG implemented (TODO, I think this is fixable).
 #   * picolibc math functions apparently are less precise, the math package
 #     fails on baremetal.
 #   * Some packages fail or hang for an unknown reason, this should be
@@ -438,8 +437,6 @@ TEST_PACKAGES_BAREMETAL = $(filter-out $(TEST_PACKAGES_NONBAREMETAL), $(TEST_PAC
 TEST_PACKAGES_NONBAREMETAL = \
 	$(TEST_PACKAGES_NONWASM) \
 	crypto/elliptic \
-	crypto/md5 \
-	crypto/sha1 \
 	math \
 	reflect \
 	encoding/asn1 \
