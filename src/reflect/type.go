@@ -373,8 +373,9 @@ func (t *rawType) CanSeq() bool {
 	case Int8, Int16, Int32, Int64, Int, Uint8, Uint16, Uint32, Uint64, Uint, Uintptr, Array, Slice, Chan, String, Map:
 		return true
 	case Func:
-		return false // TODO: implement canRangeFunc
-		// return canRangeFunc(&t.)
+		// TODO: implement canRangeFunc
+		// return canRangeFunc(t)
+		panic("unimplemented: (reflect.Type).CanSeq() for functions")
 	case Pointer:
 		return t.Elem().Kind() == Array
 	}
@@ -386,8 +387,9 @@ func (t *rawType) CanSeq2() bool {
 	case Array, Slice, String, Map:
 		return true
 	case Func:
-		return false // TODO: implement canRangeFunc2
-		// return canRangeFunc2(&t.t)
+		// TODO: implement canRangeFunc2
+		// return canRangeFunc2(t)
+		panic("unimplemented: (reflect.Type).CanSeq2() for functions")
 	case Pointer:
 		return t.Elem().Kind() == Array
 	}
