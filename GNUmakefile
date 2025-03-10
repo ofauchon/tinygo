@@ -431,17 +431,10 @@ TEST_PACKAGES_NONWASM = \
 #     (just like wasm).
 #   * picolibc math functions apparently are less precise, the math package
 #     fails on baremetal.
-#   * Some packages fail or hang for an unknown reason, this should be
-#     investigated and fixed.
 TEST_PACKAGES_BAREMETAL = $(filter-out $(TEST_PACKAGES_NONBAREMETAL), $(TEST_PACKAGES_FAST))
 TEST_PACKAGES_NONBAREMETAL = \
 	$(TEST_PACKAGES_NONWASM) \
-	crypto/elliptic \
 	math \
-	reflect \
-	encoding/asn1 \
-	encoding/base32 \
-	go/ast \
 	$(nil)
 
 # Report platforms on which each standard library package is known to pass tests
