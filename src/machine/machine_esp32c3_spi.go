@@ -52,7 +52,7 @@ type SPI struct {
 
 var (
 	// SPI0 and SPI1 are reserved for use by the caching system etc.
-	SPI2 = SPI{esp.SPI2}
+	SPI2 = &SPI{esp.SPI2}
 )
 
 // SPIConfig is used to store config info for SPI.

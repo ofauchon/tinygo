@@ -334,8 +334,8 @@ type SPI struct {
 
 var (
 	// SPI0 and SPI1 are reserved for use by the caching system etc.
-	SPI2 = SPI{esp.SPI2}
-	SPI3 = SPI{esp.SPI3}
+	SPI2 = &SPI{esp.SPI2}
+	SPI3 = &SPI{esp.SPI3}
 )
 
 // SPIConfig configures a SPI peripheral on the ESP32. Make sure to set at least

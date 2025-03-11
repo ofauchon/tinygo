@@ -248,14 +248,14 @@ var (
 	sercomI2CM6 = &I2C{6}
 	sercomI2CM7 = &I2C{7}
 
-	sercomSPIM0 = SPI{0}
-	sercomSPIM1 = SPI{1}
-	sercomSPIM2 = SPI{2}
-	sercomSPIM3 = SPI{3}
-	sercomSPIM4 = SPI{4}
-	sercomSPIM5 = SPI{5}
-	sercomSPIM6 = SPI{6}
-	sercomSPIM7 = SPI{7}
+	sercomSPIM0 = &SPI{0}
+	sercomSPIM1 = &SPI{1}
+	sercomSPIM2 = &SPI{2}
+	sercomSPIM3 = &SPI{3}
+	sercomSPIM4 = &SPI{4}
+	sercomSPIM5 = &SPI{5}
+	sercomSPIM6 = &SPI{6}
+	sercomSPIM7 = &SPI{7}
 )
 
 // GetRNG returns 32 bits of random data from the WASI random source.
