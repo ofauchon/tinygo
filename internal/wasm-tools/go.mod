@@ -3,8 +3,8 @@ module github.com/tinygo-org/tinygo/internal/wasm-tools
 go 1.23.0
 
 require (
-	go.bytecodealliance.org v0.6.0
-	go.bytecodealliance.org/cm v0.2.0
+	go.bytecodealliance.org v0.6.1
+	go.bytecodealliance.org/cm v0.2.1
 )
 
 require (
