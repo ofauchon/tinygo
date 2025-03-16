@@ -267,16 +267,17 @@ lib/wasi-libc/sysroot/lib/wasm32-wasi/libc.a:
 	cd lib/wasi-libc && $(MAKE) -j4 EXTRA_CFLAGS="-O2 -g -DNDEBUG -mnontrapping-fptoint -msign-ext" MALLOC_IMPL=none CC="$(CLANG)" AR=$(LLVM_AR) NM=$(LLVM_NM)
 
 # Generate WASI syscall bindings
-WASM_TOOLS_MODULE=github.com/bytecodealliance/wasm-tools-go
+WASM_TOOLS_MODULE=go.bytecodealliance.org
 .PHONY: wasi-syscall
 wasi-syscall: wasi-cm
+	rm -rf ./src/internal/wasi/*
 	go run -modfile ./internal/wasm-tools/go.mod $(WASM_TOOLS_MODULE)/cmd/wit-bindgen-go generate --versioned -o ./src/internal -p internal --cm internal/cm ./lib/wasi-cli/wit
 
 # Copy package cm into src/internal/cm
 .PHONY: wasi-cm
 wasi-cm:
-	# rm -rf ./src/internal/cm
-	rsync -rv --delete --exclude '*_test.go' $(shell go list -modfile ./internal/wasm-tools/go.mod -m -f {{.Dir}} $(WASM_TOOLS_MODULE))/cm ./src/internal/
+	rm -rf ./src/internal/cm/*
+	rsync -rv --delete --exclude '*_test.go' $(shell go list -modfile ./internal/wasm-tools/go.mod -m -f {{.Dir}} $(WASM_TOOLS_MODULE)/cm)/ ./src/internal/cm
 
 # Check for Node.js used during WASM tests.
 NODEJS_VERSION := $(word 1,$(subst ., ,$(shell node -v | cut -c 2-)))
