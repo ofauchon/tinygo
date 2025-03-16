@@ -12,6 +12,9 @@
         "src/device/rp/rp2350.s",
         "targets/rp2350_embedded_block.s"
     ],
+    "ldflags": [
+        "--defsym=__flash_size=2M"
+    ],
     "linkerscript": "targets/rp2350.ld",
     "openocd-interface": "picoprobe",
     "openocd-transport": "swd",

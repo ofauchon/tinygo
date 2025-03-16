@@ -2,7 +2,7 @@
 MEMORY
 {
    /* 2MiB safe default.  */
-    FLASH : ORIGIN = 0x10000000, LENGTH = 2048k
+    FLASH : ORIGIN = 0x10000000, LENGTH = __flash_size
     /* RAM consists of 8 banks, SRAM0..SRAM7 with striped mapping. */
     SRAM : ORIGIN = 0x20000000, LENGTH = 512k
     /* Banks 8 and 9 use direct mapping which can be
@@ -10,7 +10,7 @@ MEMORY
        i.e: Separate stacks for core0 and core1. */
     SRAM4 : ORIGIN = 0x20080000, LENGTH = 4k
     SRAM5 : ORIGIN = 0x20081000, LENGTH = 4k
-    FLASH_TEXT (rx) : ORIGIN = 0x10000000, LENGTH = 2048k
+    FLASH_TEXT (rx) : ORIGIN = 0x10000000, LENGTH = __flash_size
     RAM (rwx)       : ORIGIN = 0x20000000, LENGTH = 512k
 }
 

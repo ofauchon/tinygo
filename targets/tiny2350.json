@@ -3,5 +3,8 @@
         "rp2350"
     ],
     "build-tags": ["tiny2350"],
+    "ldflags": [
+        "--defsym=__flash_size=4M"
+    ],
     "serial-port": ["2e8a:000f"]
 }
