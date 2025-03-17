@@ -449,8 +449,15 @@ func Build(pkgName, outpath, tmpdir string, config *compileopts.Config) (BuildRe
 					if global.IsNil() {
 						return errors.New("global not found: " + globalName)
 					}
+					globalType := global.GlobalValueType()
+					if globalType.TypeKind() != llvm.StructTypeKind || globalType.StructName() != "runtime._string" {
+						// Verify this is indeed a string. This is needed so
+						// that makeGlobalsModule can just create the right
+						// globals of string type without checking.
+						return fmt.Errorf("%s: not a string", globalName)
+					}
 					name := global.Name()
-					newGlobal := llvm.AddGlobal(mod, global.GlobalValueType(), name+".tmp")
+					newGlobal := llvm.AddGlobal(mod, globalType, name+".tmp")
 					global.ReplaceAllUsesWith(newGlobal)
 					global.EraseFromParentAsGlobal()
 					newGlobal.SetName(name)
@@ -538,6 +545,15 @@ func Build(pkgName, outpath, tmpdir string, config *compileopts.Config) (BuildRe
 				}
 			}
 
+			// Insert values from -ldflags="-X ..." into the IR.
+			// This is a separate module, so that the "runtime._string" type
+			// doesn't need to match precisely. LLVM tends to rename that type
+			// sometimes, leading to errors. But linking in a separate module
+			// works fine. See:
+			// https://github.com/tinygo-org/tinygo/issues/4810
+			globalsMod := makeGlobalsModule(ctx, globalValues, machine)
+			llvm.LinkModules(mod, globalsMod)
+
 			// Create runtime.initAll function that calls the runtime
 			// initializer of each package.
 			llvmInitFn := mod.NamedFunction("runtime.initAll")
@@ -590,7 +606,7 @@ func Build(pkgName, outpath, tmpdir string, config *compileopts.Config) (BuildRe
 
 			// Run all optimization passes, which are much more effective now
 			// that the optimizer can see the whole program at once.
-			err := optimizeProgram(mod, config, globalValues)
+			err := optimizeProgram(mod, config)
 			if err != nil {
 				return err
 			}
@@ -1145,7 +1161,7 @@ func createEmbedObjectFile(data, hexSum, sourceFile, sourceDir, tmpdir string, c
 // optimizeProgram runs a series of optimizations and transformations that are
 // needed to convert a program to its final form. Some transformations are not
 // optional and must be run as the compiler expects them to run.
-func optimizeProgram(mod llvm.Module, config *compileopts.Config, globalValues map[string]map[string]string) error {
+func optimizeProgram(mod llvm.Module, config *compileopts.Config) error {
 	err := interp.Run(mod, config.Options.InterpTimeout, config.DumpSSA())
 	if err != nil {
 		return err
@@ -1163,12 +1179,6 @@ func optimizeProgram(mod llvm.Module, config *compileopts.Config, globalValues m
 		}
 	}
 
-	// Insert values from -ldflags="-X ..." into the IR.
-	err = setGlobalValues(mod, globalValues)
-	if err != nil {
-		return err
-	}
-
 	// Run most of the whole-program optimizations (including the whole
 	// O0/O1/O2/Os/Oz optimization pipeline).
 	errs := transform.Optimize(mod, config)
@@ -1182,10 +1192,19 @@ func optimizeProgram(mod llvm.Module, config *compileopts.Config, globalValues m
 	return nil
 }
 
-// setGlobalValues sets the global values from the -ldflags="-X ..." compiler
-// option in the given module. An error may be returned if the global is not of
-// the expected type.
-func setGlobalValues(mod llvm.Module, globals map[string]map[string]string) error {
+func makeGlobalsModule(ctx llvm.Context, globals map[string]map[string]string, machine llvm.TargetMachine) llvm.Module {
+	mod := ctx.NewModule("cmdline-globals")
+	targetData := machine.CreateTargetData()
+	defer targetData.Dispose()
+	mod.SetDataLayout(targetData.String())
+
+	stringType := ctx.StructCreateNamed("runtime._string")
+	uintptrType := ctx.IntType(targetData.PointerSize() * 8)
+	stringType.StructSetBody([]llvm.Type{
+		llvm.PointerType(ctx.Int8Type(), 0),
+		uintptrType,
+	}, false)
+
 	var pkgPaths []string
 	for pkgPath := range globals {
 		pkgPaths = append(pkgPaths, pkgPath)
@@ -1201,24 +1220,6 @@ func setGlobalValues(mod llvm.Module, globals map[string]map[string]string) erro
 		for _, name := range names {
 			value := pkg[name]
 			globalName := pkgPath + "." + name
-			global := mod.NamedGlobal(globalName)
-			if global.IsNil() || !global.Initializer().IsNil() {
-				// The global either does not exist (optimized away?) or has
-				// some value, in which case it has already been initialized at
-				// package init time.
-				continue
-			}
-
-			// A strin is a {ptr, len} pair. We need these types to build the
-			// initializer.
-			initializerType := global.GlobalValueType()
-			if initializerType.TypeKind() != llvm.StructTypeKind || initializerType.StructName() == "" {
-				return fmt.Errorf("%s: not a string", globalName)
-			}
-			elementTypes := initializerType.StructElementTypes()
-			if len(elementTypes) != 2 {
-				return fmt.Errorf("%s: not a string", globalName)
-			}
 
 			// Create a buffer for the string contents.
 			bufInitializer := mod.Context().ConstString(value, false)
@@ -1229,22 +1230,20 @@ func setGlobalValues(mod llvm.Module, globals map[string]map[string]string) erro
 			buf.SetLinkage(llvm.PrivateLinkage)
 
 			// Create the string value, which is a {ptr, len} pair.
-			zero := llvm.ConstInt(mod.Context().Int32Type(), 0, false)
-			ptr := llvm.ConstGEP(bufInitializer.Type(), buf, []llvm.Value{zero, zero})
-			if ptr.Type() != elementTypes[0] {
-				return fmt.Errorf("%s: not a string", globalName)
-			}
-			length := llvm.ConstInt(elementTypes[1], uint64(len(value)), false)
-			initializer := llvm.ConstNamedStruct(initializerType, []llvm.Value{
-				ptr,
+			length := llvm.ConstInt(uintptrType, uint64(len(value)), false)
+			initializer := llvm.ConstNamedStruct(stringType, []llvm.Value{
+				buf,
 				length,
 			})
 
-			// Set the initializer. No initializer should be set at this point.
+			// Create the string global.
+			global := llvm.AddGlobal(mod, stringType, globalName)
 			global.SetInitializer(initializer)
+			global.SetAlignment(targetData.PrefTypeAlignment(stringType))
 		}
 	}
-	return nil
+
+	return mod
 }
 
 // functionStackSizes keeps stack size information about a single function
