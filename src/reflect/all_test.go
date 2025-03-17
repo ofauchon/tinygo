@@ -381,8 +381,6 @@ func TestSetValue(t *testing.T) {
 	}
 }
 
-/*
-
 func TestMapIterSet(t *testing.T) {
 	m := make(map[string]any, len(valueTests))
 	for _, tt := range valueTests {
@@ -429,8 +427,6 @@ func TestMapIterSet(t *testing.T) {
 		t.Errorf("wanted %d alloc, got %d", want, got)
 	}
 }
-
-*/
 
 func TestCanIntUintFloatComplex(t *testing.T) {
 	type integer int
@@ -7955,6 +7951,8 @@ func TestConvertibleTo(t *testing.T) {
 	}
 }
 
+*/
+
 func TestSetIter(t *testing.T) {
 	data := map[string]int{
 		"foo": 1,
@@ -8043,6 +8041,8 @@ func TestSetIter(t *testing.T) {
 		})
 	}
 }
+
+/*
 
 func TestMethodCallValueCodePtr(t *testing.T) {
 	m := ValueOf(Point{}).Method(1)

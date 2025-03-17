@@ -65,12 +65,24 @@ func (it *MapIter) Key() Value {
 	return Value{((*reflectlite.MapIter)(it)).Key()}
 }
 
+func (v Value) SetIterKey(iter *MapIter) {
+	v.Value.SetIterKey((*reflectlite.MapIter)(iter))
+}
+
 func (it *MapIter) Value() Value {
 	return Value{((*reflectlite.MapIter)(it)).Value()}
 }
 
+func (v Value) SetIterValue(iter *MapIter) {
+	v.Value.SetIterValue((*reflectlite.MapIter)(iter))
+}
+
 func (it *MapIter) Next() bool {
 	return ((*reflectlite.MapIter)(it)).Next()
+}
+
+func (iter *MapIter) Reset(v Value) {
+	(*reflectlite.MapIter)(iter).Reset(v.Value)
 }
 
 func (v Value) Set(x Value) {

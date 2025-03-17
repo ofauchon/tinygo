@@ -1102,20 +1102,9 @@ func hashmapNewIterator() unsafe.Pointer
 func hashmapNext(m unsafe.Pointer, it unsafe.Pointer, key, value unsafe.Pointer) bool
 
 func (v Value) MapRange() *MapIter {
-	if v.Kind() != Map {
-		panic(&ValueError{Method: "MapRange", Kind: v.Kind()})
-	}
-
-	keyType := v.typecode.key()
-
-	keyTypeIsEmptyInterface := keyType.Kind() == Interface && keyType.NumMethod() == 0
-	shouldUnpackInterface := !keyTypeIsEmptyInterface && keyType.Kind() != String && !keyType.isBinary()
-
-	return &MapIter{
-		m:                  v,
-		it:                 hashmapNewIterator(),
-		unpackKeyInterface: shouldUnpackInterface,
-	}
+	iter := &MapIter{}
+	iter.Reset(v)
+	return iter
 }
 
 type MapIter struct {
@@ -1142,6 +1131,10 @@ func (it *MapIter) Key() Value {
 	return it.key.Elem()
 }
 
+func (v Value) SetIterKey(iter *MapIter) {
+	v.Set(iter.Key())
+}
+
 func (it *MapIter) Value() Value {
 	if !it.valid {
 		panic("reflect.MapIter.Value called on invalid iterator")
@@ -1150,12 +1143,33 @@ func (it *MapIter) Value() Value {
 	return it.val.Elem()
 }
 
+func (v Value) SetIterValue(iter *MapIter) {
+	v.Set(iter.Value())
+}
+
 func (it *MapIter) Next() bool {
 	it.key = New(it.m.typecode.Key())
 	it.val = New(it.m.typecode.Elem())
 
 	it.valid = hashmapNext(it.m.pointer(), it.it, it.key.value, it.val.value)
 	return it.valid
+}
+
+func (iter *MapIter) Reset(v Value) {
+	if v.Kind() != Map {
+		panic(&ValueError{Method: "MapRange", Kind: v.Kind()})
+	}
+
+	keyType := v.typecode.key()
+
+	keyTypeIsEmptyInterface := keyType.Kind() == Interface && keyType.NumMethod() == 0
+	shouldUnpackInterface := !keyTypeIsEmptyInterface && keyType.Kind() != String && !keyType.isBinary()
+
+	*iter = MapIter{
+		m:                  v,
+		it:                 hashmapNewIterator(),
+		unpackKeyInterface: shouldUnpackInterface,
+	}
 }
 
 func (v Value) Set(x Value) {
