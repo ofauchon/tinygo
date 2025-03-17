@@ -371,13 +371,6 @@ func (c *compilerContext) getPointerBitmap(typ llvm.Type, pos token.Pos) *big.In
 		return big.NewInt(1)
 	case llvm.StructTypeKind:
 		ptrs := big.NewInt(0)
-		if typ.StructName() == "runtime.funcValue" {
-			// Hack: the type runtime.funcValue contains an 'id' field which is
-			// of type uintptr, but before the LowerFuncValues pass it actually
-			// contains a pointer (ptrtoint) to a global. This trips up the
-			// interp package. Therefore, make the id field a pointer for now.
-			typ = c.ctx.StructType([]llvm.Type{c.dataPtrType, c.dataPtrType}, false)
-		}
 		for i, subtyp := range typ.StructElementTypes() {
 			subptrs := c.getPointerBitmap(subtyp, pos)
 			if subptrs.BitLen() == 0 {

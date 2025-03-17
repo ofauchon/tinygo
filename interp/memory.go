@@ -824,19 +824,6 @@ func (v rawValue) rawLLVMValue(mem *memoryView) (llvm.Value, error) {
 			if err != nil {
 				return llvm.Value{}, err
 			}
-			if !field.IsAGlobalVariable().IsNil() {
-				elementType := field.GlobalValueType()
-				if elementType.TypeKind() == llvm.StructTypeKind {
-					// There are some special pointer types that should be used
-					// as a ptrtoint, so that they can be used in certain
-					// optimizations.
-					name := elementType.StructName()
-					if name == "runtime.funcValueWithSignature" {
-						uintptrType := ctx.IntType(int(mem.r.pointerSize) * 8)
-						field = llvm.ConstPtrToInt(field, uintptrType)
-					}
-				}
-			}
 			structFields = append(structFields, field)
 			i += mem.r.pointerSize
 			continue
