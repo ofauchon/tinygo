@@ -13,12 +13,6 @@ func Indirect(v Value) Value {
 	return Value{reflectlite.Indirect(v.Value)}
 }
 
-//go:linkname composeInterface runtime.composeInterface
-func composeInterface(unsafe.Pointer, unsafe.Pointer) interface{}
-
-//go:linkname decomposeInterface runtime.decomposeInterface
-func decomposeInterface(i interface{}) (unsafe.Pointer, unsafe.Pointer)
-
 func ValueOf(i interface{}) Value {
 	return Value{reflectlite.ValueOf(i)}
 }
@@ -61,12 +55,6 @@ func (v Value) MapIndex(key Value) Value {
 	return Value{v.Value.MapIndex(key.Value)}
 }
 
-//go:linkname hashmapNewIterator runtime.hashmapNewIterator
-func hashmapNewIterator() unsafe.Pointer
-
-//go:linkname hashmapNext runtime.hashmapNext
-func hashmapNext(m unsafe.Pointer, it unsafe.Pointer, key, value unsafe.Pointer) bool
-
 func (v Value) MapRange() *MapIter {
 	return (*MapIter)(v.Value.MapRange())
 }
@@ -96,9 +84,6 @@ func (v Value) CanConvert(t Type) bool {
 func (v Value) Convert(t Type) Value {
 	return Value{v.Value.Convert(toRawType(t))}
 }
-
-//go:linkname slicePanic runtime.slicePanic
-func slicePanic()
 
 func MakeSlice(typ Type, len, cap int) Value {
 	return Value{reflectlite.MakeSlice(toRawType(typ), len, cap)}
@@ -157,9 +142,6 @@ func (v Value) FieldByName(name string) Value {
 func (v Value) FieldByNameFunc(match func(string) bool) Value {
 	return Value{v.Value.FieldByNameFunc(match)}
 }
-
-//go:linkname hashmapMake runtime.hashmapMake
-func hashmapMake(keySize, valueSize uintptr, sizeHint uintptr, alg uint8) unsafe.Pointer
 
 type SelectDir int
 
