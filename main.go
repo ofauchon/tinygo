@@ -1856,10 +1856,7 @@ func main() {
 			os.Exit(1)
 		}
 		config.GoMinorVersion = 0 // this avoids creating the list of Go1.x build tags.
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
+
 		cachedGOROOT, err := loader.GetCachedGoroot(config)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
