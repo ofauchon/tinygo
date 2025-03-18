@@ -1,3 +1,53 @@
+0.37.0
+---
+* **general**
+  - add the Boehm-Demers-Weiser GC on Linux
+* **ci**
+  - add more tests for wasm and baremetal
+* **compiler**
+  - crypto/internal/sysrand is allowed to use unsafe signatures
+* **examples**
+  - add goroutine benchmark to examples
+* **fixes**
+  - ensure use of pointers for SPI interface on atsam21/atsam51 and other machines/boards that were missing implementation (#4798)
+  - replace loop counter with hw timer for USB SetAddressReq on rp2040 (#4796)
+* **internal**
+  - update to go.bytecodealliance.org@v0.6.2 in GNUmakefile and internal/wasm-tools
+  - exclude certain files when copying package in internal/cm
+  - update to go.bytecodealliance.org/cm@v0.2.2 in internal/cm
+  - remove old reflect.go in internal/reflectlite
+* **loader**
+  - use build tags for package iter and iter methods on reflect.Value in loader, iter, reflect
+  - add shim for go1.22 and earlier in loader, iter
+* **machine**
+  - bump rp2040 to 200MHz (#4768)
+  - correct register address for Pin.SetInterrupt for rp2350 (#4782)
+  - don't block the rp2xxx UART interrupt handler
+  - fix RP2040 Pico board on the playground
+  - add flash support for rp2350 (#4803)
+* **os**
+  - add stub Symlink for wasm
+* **refactor**
+  - use *SPI everywhere to make consistent for implementations. Fixes #4663 "in reverse" by making SPI a pointer everywhere, as discussed in the comments.
+* **reflect**
+  - add Value.SetIter{Key,Value} and MapIter.Reset in reflect, internal/reflectlite
+  - embed reflectlite types into reflect types in reflect, internal/reflectlite
+  - add Go 1.24 iter.Seq[2] methods
+  - copy reflect iter tests from upstream Go
+  - panic on Type.CanSeq[2] instead of returning false
+  - remove strconv.go
+  - remove unused go:linkname functions
+* **riscv-qemu**
+  - add VirtIO RNG device
+  - increase stack size
+* **runtime**
+  - only allocate heap memory when needed
+  - remove unused file func.go
+  - use package reflectlite
+* **transform**
+  - cherry-pick from #4774
+
+
 0.36.0
 ---
 * **general**
