@@ -247,10 +247,9 @@ func MuslArchitecture(triple string) string {
 	return CanonicalArchName(triple)
 }
 
-// LibcPath returns the path to the libc directory. The libc path will be either
-// a precompiled libc shipped with a TinyGo build, or a libc path in the cache
-// directory (which might not yet be built).
-func (c *Config) LibcPath(name string) (path string, precompiled bool) {
+// LibcPath returns the path to the libc directory. The libc path will be a libc
+// path in the cache directory (which might not yet be built).
+func (c *Config) LibcPath(name string) string {
 	archname := c.Triple()
 	if c.CPU() != "" {
 		archname += "-" + c.CPU()
@@ -266,17 +265,9 @@ func (c *Config) LibcPath(name string) (path string, precompiled bool) {
 		archname += "-" + c.Target.Libc
 	}
 
-	// Try to load a precompiled library.
-	precompiledDir := filepath.Join(goenv.Get("TINYGOROOT"), "pkg", archname, name)
-	if _, err := os.Stat(precompiledDir); err == nil {
-		// Found a precompiled library for this OS/architecture. Return the path
-		// directly.
-		return precompiledDir, true
-	}
-
 	// No precompiled library found. Determine the path name that will be used
 	// in the build cache.
-	return filepath.Join(goenv.Get("GOCACHE"), name+"-"+archname), false
+	return filepath.Join(goenv.Get("GOCACHE"), name+"-"+archname)
 }
 
 // DefaultBinaryExtension returns the default extension for binaries, such as
@@ -360,7 +351,7 @@ func (c *Config) LibcCFlags() []string {
 	case "picolibc":
 		root := goenv.Get("TINYGOROOT")
 		picolibcDir := filepath.Join(root, "lib", "picolibc", "newlib", "libc")
-		path, _ := c.LibcPath("picolibc")
+		path := c.LibcPath("picolibc")
 		return []string{
 			"-nostdlibinc",
 			"-isystem", filepath.Join(path, "include"),
@@ -370,7 +361,7 @@ func (c *Config) LibcCFlags() []string {
 		}
 	case "musl":
 		root := goenv.Get("TINYGOROOT")
-		path, _ := c.LibcPath("musl")
+		path := c.LibcPath("musl")
 		arch := MuslArchitecture(c.Triple())
 		return []string{
 			"-nostdlibinc",
@@ -390,7 +381,7 @@ func (c *Config) LibcCFlags() []string {
 		return nil
 	case "mingw-w64":
 		root := goenv.Get("TINYGOROOT")
-		path, _ := c.LibcPath("mingw-w64")
+		path := c.LibcPath("mingw-w64")
 		return []string{
 			"-nostdlibinc",
 			"-isystem", filepath.Join(path, "include"),

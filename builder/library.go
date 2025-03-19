@@ -48,13 +48,8 @@ type Library struct {
 // target config. In other words, pass this libc if the library needs a libc to
 // compile.
 func (l *Library) load(config *compileopts.Config, tmpdir string, libc *compileJob) (job *compileJob, abortLock func(), err error) {
-	outdir, precompiled := config.LibcPath(l.name)
+	outdir := config.LibcPath(l.name)
 	archiveFilePath := filepath.Join(outdir, "lib.a")
-	if precompiled {
-		// Found a precompiled library for this OS/architecture. Return the path
-		// directly.
-		return dummyCompileJob(archiveFilePath), func() {}, nil
-	}
 
 	// Create a lock on the output (if supported).
 	// This is a bit messy, but avoids a deadlock because it is ordered consistently with other library loads within a build.
