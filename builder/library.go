@@ -25,6 +25,9 @@ type Library struct {
 	// cflags returns the C flags specific to this library
 	cflags func(target, headerPath string) []string
 
+	// needsLibc is set to true if this library needs libc headers.
+	needsLibc bool
+
 	// The source directory.
 	sourceDir func() string
 
@@ -43,11 +46,7 @@ type Library struct {
 // output archive file, it is expected to be removed after use.
 // As a side effect, this call creates the library header files if they didn't
 // exist yet.
-// The provided libc job (if not null) will cause this libc to be added as a
-// dependency for all C compiler jobs, and adds libc headers for the given
-// target config. In other words, pass this libc if the library needs a libc to
-// compile.
-func (l *Library) load(config *compileopts.Config, tmpdir string, libc *compileJob) (job *compileJob, abortLock func(), err error) {
+func (l *Library) load(config *compileopts.Config, tmpdir string) (job *compileJob, abortLock func(), err error) {
 	outdir := config.LibcPath(l.name)
 	archiveFilePath := filepath.Join(outdir, "lib.a")
 
@@ -180,7 +179,7 @@ func (l *Library) load(config *compileopts.Config, tmpdir string, libc *compileJ
 			args = append(args, "-mfpu=vfpv2")
 		}
 	}
-	if libc != nil {
+	if l.needsLibc {
 		args = append(args, config.LibcCFlags()...)
 	}
 
@@ -251,9 +250,6 @@ func (l *Library) load(config *compileopts.Config, tmpdir string, libc *compileJ
 				return nil
 			},
 		}
-		if libc != nil {
-			objfile.dependencies = append(objfile.dependencies, libc)
-		}
 		job.dependencies = append(job.dependencies, objfile)
 	}
 
@@ -283,9 +279,6 @@ func (l *Library) load(config *compileopts.Config, tmpdir string, libc *compileJ
 				}
 				return os.Rename(tmpfile.Name(), filepath.Join(outdir, "crt1.o"))
 			},
-		}
-		if libc != nil {
-			crt1Job.dependencies = append(crt1Job.dependencies, libc)
 		}
 		job.dependencies = append(job.dependencies, crt1Job)
 	}

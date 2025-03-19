@@ -49,6 +49,7 @@ var BoehmGC = Library{
 			"-I" + libdir + "/include",
 		}
 	},
+	needsLibc: true,
 	sourceDir: func() string {
 		return filepath.Join(goenv.Get("TINYGOROOT"), "lib/bdwgc")
 	},
