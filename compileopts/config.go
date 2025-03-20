@@ -371,10 +371,10 @@ func (c *Config) LibcCFlags() []string {
 			"-isystem", filepath.Join(root, "lib", "musl", "include"),
 		}
 	case "wasi-libc":
-		root := goenv.Get("TINYGOROOT")
+		path := c.LibcPath("wasi-libc")
 		return []string{
 			"-nostdlibinc",
-			"-isystem", root + "/lib/wasi-libc/sysroot/include",
+			"-isystem", filepath.Join(path, "include"),
 		}
 	case "wasmbuiltins":
 		// nothing to add (library is purely for builtins)

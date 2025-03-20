@@ -89,15 +89,6 @@ jobs:
         with:
           key: ${{ steps.cache-llvm-build.outputs.cache-primary-key }}
           path: llvm-build
-      - name: Cache wasi-libc sysroot
-        uses: actions/cache@v4
-        id: cache-wasi-libc
-        with:
-          key: wasi-libc-sysroot-${{ matrix.os }}-v1
-          path: lib/wasi-libc/sysroot
-      - name: Build wasi-libc
-        if: steps.cache-wasi-libc.outputs.cache-hit != 'true'
-        run: make wasi-libc
       - name: make gen-device
         run: make -j3 gen-device
       - name: Test TinyGo

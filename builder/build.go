@@ -14,7 +14,6 @@ import (
 	"fmt"
 	"go/types"
 	"hash/crc32"
-	"io/fs"
 	"math/bits"
 	"os"
 	"os/exec"
@@ -168,11 +167,12 @@ func Build(pkgName, outpath, tmpdir string, config *compileopts.Config) (BuildRe
 		defer unlock()
 		libcDependencies = append(libcDependencies, libcJob)
 	case "wasi-libc":
-		path := filepath.Join(root, "lib/wasi-libc/sysroot/lib/wasm32-wasi/libc.a")
-		if _, err := os.Stat(path); errors.Is(err, fs.ErrNotExist) {
-			return BuildResult{}, errors.New("could not find wasi-libc, perhaps you need to run `make wasi-libc`?")
+		libcJob, unlock, err := libWasiLibc.load(config, tmpdir)
+		if err != nil {
+			return BuildResult{}, err
 		}
-		libcDependencies = append(libcDependencies, dummyCompileJob(path))
+		defer unlock()
+		libcDependencies = append(libcDependencies, libcJob)
 	case "wasmbuiltins":
 		libcJob, unlock, err := libWasmBuiltins.load(config, tmpdir)
 		if err != nil {

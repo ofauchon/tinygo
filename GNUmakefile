@@ -261,13 +261,6 @@ build/wasm-opt$(EXE):
 	cp lib/binaryen/bin/wasm-opt$(EXE) build/wasm-opt$(EXE)
 endif
 
-# Build wasi-libc sysroot
-.PHONY: wasi-libc
-wasi-libc: lib/wasi-libc/sysroot/lib/wasm32-wasi/libc.a
-lib/wasi-libc/sysroot/lib/wasm32-wasi/libc.a:
-	@if [ ! -e lib/wasi-libc/Makefile ]; then echo "Submodules have not been downloaded. Please download them using:\n  git submodule update --init"; exit 1; fi
-	cd lib/wasi-libc && $(MAKE) -j4 EXTRA_CFLAGS="-O2 -g -DNDEBUG -mnontrapping-fptoint -msign-ext" MALLOC_IMPL=none CC="$(CLANG)" AR=$(LLVM_AR) NM=$(LLVM_NM)
-
 # Generate WASI syscall bindings
 WASM_TOOLS_MODULE=go.bytecodealliance.org
 .PHONY: wasi-syscall
@@ -295,7 +288,7 @@ check-nodejs-version:
 tinygo: ## Build the TinyGo compiler
 	@if [ ! -f "$(LLVM_BUILDDIR)/bin/llvm-config" ]; then echo "Fetch and build LLVM first by running:"; echo "  $(MAKE) llvm-source"; echo "  $(MAKE) $(LLVM_BUILDDIR)"; exit 1; fi
 	CGO_CPPFLAGS="$(CGO_CPPFLAGS)" CGO_CXXFLAGS="$(CGO_CXXFLAGS)" CGO_LDFLAGS="$(CGO_LDFLAGS)" $(GOENVFLAGS) $(GO) build -buildmode exe -o build/tinygo$(EXE) -tags "byollvm osusergo" .
-test: wasi-libc check-nodejs-version
+test: check-nodejs-version
 	CGO_CPPFLAGS="$(CGO_CPPFLAGS)" CGO_CXXFLAGS="$(CGO_CXXFLAGS)" CGO_LDFLAGS="$(CGO_LDFLAGS)" $(GO) test $(GOTESTFLAGS) -timeout=1h -buildmode exe -tags "byollvm osusergo" $(GOTESTPKGS)
 
 # Standard library packages that pass tests on darwin, linux, wasi, and windows, but take over a minute in wasi
@@ -528,9 +521,9 @@ test-corpus:
 	CGO_CPPFLAGS="$(CGO_CPPFLAGS)" CGO_CXXFLAGS="$(CGO_CXXFLAGS)" CGO_LDFLAGS="$(CGO_LDFLAGS)" $(GO) test $(GOTESTFLAGS) -timeout=1h -buildmode exe -tags byollvm -run TestCorpus . -corpus=testdata/corpus.yaml
 test-corpus-fast:
 	CGO_CPPFLAGS="$(CGO_CPPFLAGS)" CGO_CXXFLAGS="$(CGO_CXXFLAGS)" CGO_LDFLAGS="$(CGO_LDFLAGS)" $(GO) test $(GOTESTFLAGS) -timeout=1h -buildmode exe -tags byollvm -run TestCorpus -short . -corpus=testdata/corpus.yaml
-test-corpus-wasi: wasi-libc
+test-corpus-wasi:
 	CGO_CPPFLAGS="$(CGO_CPPFLAGS)" CGO_CXXFLAGS="$(CGO_CXXFLAGS)" CGO_LDFLAGS="$(CGO_LDFLAGS)" $(GO) test $(GOTESTFLAGS) -timeout=1h -buildmode exe -tags byollvm -run TestCorpus . -corpus=testdata/corpus.yaml -target=wasip1
-test-corpus-wasip2: wasi-libc
+test-corpus-wasip2:
 	CGO_CPPFLAGS="$(CGO_CPPFLAGS)" CGO_CXXFLAGS="$(CGO_CXXFLAGS)" CGO_LDFLAGS="$(CGO_LDFLAGS)" $(GO) test $(GOTESTFLAGS) -timeout=1h -buildmode exe -tags byollvm -run TestCorpus . -corpus=testdata/corpus.yaml -target=wasip2
 
 .PHONY: testchdir
@@ -941,7 +934,7 @@ endif
 wasmtest:
 	$(GO) test ./tests/wasm
 
-build/release: tinygo gen-device wasi-libc $(if $(filter 1,$(USE_SYSTEM_BINARYEN)),,binaryen)
+build/release: tinygo gen-device $(if $(filter 1,$(USE_SYSTEM_BINARYEN)),,binaryen)
 	@mkdir -p build/release/tinygo/bin
 	@mkdir -p build/release/tinygo/lib/bdwgc
 	@mkdir -p build/release/tinygo/lib/clang/include
@@ -956,7 +949,7 @@ build/release: tinygo gen-device wasi-libc $(if $(filter 1,$(USE_SYSTEM_BINARYEN
 	@mkdir -p build/release/tinygo/lib/nrfx
 	@mkdir -p build/release/tinygo/lib/picolibc/newlib/libc
 	@mkdir -p build/release/tinygo/lib/picolibc/newlib/libm
-	@mkdir -p build/release/tinygo/lib/wasi-libc/libc-bottom-half/headers
+	@mkdir -p build/release/tinygo/lib/wasi-libc/libc-bottom-half
 	@mkdir -p build/release/tinygo/lib/wasi-libc/libc-top-half/musl/arch
 	@mkdir -p build/release/tinygo/lib/wasi-libc/libc-top-half/musl/src
 	@mkdir -p build/release/tinygo/lib/wasi-cli/
@@ -1019,15 +1012,36 @@ endif
 	@cp -rp lib/picolibc/newlib/libm/common      build/release/tinygo/lib/picolibc/newlib/libm
 	@cp -rp lib/picolibc/newlib/libm/math        build/release/tinygo/lib/picolibc/newlib/libm
 	@cp -rp lib/picolibc-stdio.c         build/release/tinygo/lib
-	@cp -rp lib/wasi-libc/libc-bottom-half/headers/public           build/release/tinygo/lib/wasi-libc/libc-bottom-half/headers
+	@cp -rp lib/wasi-libc/libc-bottom-half/cloudlibc                build/release/tinygo/lib/wasi-libc/libc-bottom-half
+	@cp -rp lib/wasi-libc/libc-bottom-half/headers                  build/release/tinygo/lib/wasi-libc/libc-bottom-half
+	@cp -rp lib/wasi-libc/libc-bottom-half/sources                  build/release/tinygo/lib/wasi-libc/libc-bottom-half
+	@cp -rp lib/wasi-libc/libc-top-half/headers                     build/release/tinygo/lib/wasi-libc/libc-top-half
 	@cp -rp lib/wasi-libc/libc-top-half/musl/arch/generic           build/release/tinygo/lib/wasi-libc/libc-top-half/musl/arch
 	@cp -rp lib/wasi-libc/libc-top-half/musl/arch/wasm32            build/release/tinygo/lib/wasi-libc/libc-top-half/musl/arch
+	@cp -rp lib/wasi-libc/libc-top-half/musl/include                build/release/tinygo/lib/wasi-libc/libc-top-half/musl
+	@cp -rp lib/wasi-libc/libc-top-half/musl/src/conf               build/release/tinygo/lib/wasi-libc/libc-top-half/musl/src
+	@cp -rp lib/wasi-libc/libc-top-half/musl/src/dirent             build/release/tinygo/lib/wasi-libc/libc-top-half/musl/src
+	@cp -rp lib/wasi-libc/libc-top-half/musl/src/env                build/release/tinygo/lib/wasi-libc/libc-top-half/musl/src
+	@cp -rp lib/wasi-libc/libc-top-half/musl/src/errno              build/release/tinygo/lib/wasi-libc/libc-top-half/musl/src
+	@cp -rp lib/wasi-libc/libc-top-half/musl/src/exit               build/release/tinygo/lib/wasi-libc/libc-top-half/musl/src
+	@cp -rp lib/wasi-libc/libc-top-half/musl/src/fcntl              build/release/tinygo/lib/wasi-libc/libc-top-half/musl/src
+	@cp -rp lib/wasi-libc/libc-top-half/musl/src/fenv               build/release/tinygo/lib/wasi-libc/libc-top-half/musl/src
 	@cp -rp lib/wasi-libc/libc-top-half/musl/src/include            build/release/tinygo/lib/wasi-libc/libc-top-half/musl/src
 	@cp -rp lib/wasi-libc/libc-top-half/musl/src/internal           build/release/tinygo/lib/wasi-libc/libc-top-half/musl/src
+	@cp -rp lib/wasi-libc/libc-top-half/musl/src/legacy             build/release/tinygo/lib/wasi-libc/libc-top-half/musl/src
+	@cp -rp lib/wasi-libc/libc-top-half/musl/src/locale             build/release/tinygo/lib/wasi-libc/libc-top-half/musl/src
 	@cp -rp lib/wasi-libc/libc-top-half/musl/src/math               build/release/tinygo/lib/wasi-libc/libc-top-half/musl/src
+	@cp -rp lib/wasi-libc/libc-top-half/musl/src/misc               build/release/tinygo/lib/wasi-libc/libc-top-half/musl/src
+	@cp -rp lib/wasi-libc/libc-top-half/musl/src/multibyte          build/release/tinygo/lib/wasi-libc/libc-top-half/musl/src
+	@cp -rp lib/wasi-libc/libc-top-half/musl/src/network            build/release/tinygo/lib/wasi-libc/libc-top-half/musl/src
+	@cp -rp lib/wasi-libc/libc-top-half/musl/src/stat               build/release/tinygo/lib/wasi-libc/libc-top-half/musl/src
+	@cp -rp lib/wasi-libc/libc-top-half/musl/src/stdio              build/release/tinygo/lib/wasi-libc/libc-top-half/musl/src
+	@cp -rp lib/wasi-libc/libc-top-half/musl/src/stdlib             build/release/tinygo/lib/wasi-libc/libc-top-half/musl/src
 	@cp -rp lib/wasi-libc/libc-top-half/musl/src/string             build/release/tinygo/lib/wasi-libc/libc-top-half/musl/src
-	@cp -rp lib/wasi-libc/libc-top-half/musl/include                build/release/tinygo/lib/wasi-libc/libc-top-half/musl
-	@cp -rp lib/wasi-libc/sysroot                                   build/release/tinygo/lib/wasi-libc/sysroot
+	@cp -rp lib/wasi-libc/libc-top-half/musl/src/thread             build/release/tinygo/lib/wasi-libc/libc-top-half/musl/src
+	@cp -rp lib/wasi-libc/libc-top-half/musl/src/time               build/release/tinygo/lib/wasi-libc/libc-top-half/musl/src
+	@cp -rp lib/wasi-libc/libc-top-half/musl/src/unistd             build/release/tinygo/lib/wasi-libc/libc-top-half/musl/src
+	@cp -rp lib/wasi-libc/libc-top-half/sources                     build/release/tinygo/lib/wasi-libc/libc-top-half
 	@cp -rp lib/wasi-cli/wit                                        build/release/tinygo/lib/wasi-cli/wit
 	@cp -rp llvm-project/compiler-rt/lib/builtins build/release/tinygo/lib/compiler-rt-builtins
 	@cp -rp llvm-project/compiler-rt/LICENSE.TXT  build/release/tinygo/lib/compiler-rt-builtins

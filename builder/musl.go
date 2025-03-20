@@ -12,6 +12,45 @@ import (
 	"github.com/tinygo-org/tinygo/goenv"
 )
 
+// Create the alltypes.h file from the appropriate alltypes.h.in files.
+func buildMuslAllTypes(arch, muslDir, outputBitsDir string) error {
+	// Create the file alltypes.h.
+	f, err := os.Create(filepath.Join(outputBitsDir, "alltypes.h"))
+	if err != nil {
+		return err
+	}
+	infiles := []string{
+		filepath.Join(muslDir, "arch", arch, "bits", "alltypes.h.in"),
+		filepath.Join(muslDir, "include", "alltypes.h.in"),
+	}
+	for _, infile := range infiles {
+		data, err := os.ReadFile(infile)
+		if err != nil {
+			return err
+		}
+		lines := strings.Split(string(data), "\n")
+		for _, line := range lines {
+			if strings.HasPrefix(line, "TYPEDEF ") {
+				matches := regexp.MustCompile(`TYPEDEF (.*) ([^ ]*);`).FindStringSubmatch(line)
+				value := matches[1]
+				name := matches[2]
+				line = fmt.Sprintf("#if defined(__NEED_%s) && !defined(__DEFINED_%s)\ntypedef %s %s;\n#define __DEFINED_%s\n#endif\n", name, name, value, name, name)
+			}
+			if strings.HasPrefix(line, "STRUCT ") {
+				matches := regexp.MustCompile(`STRUCT * ([^ ]*) (.*);`).FindStringSubmatch(line)
+				name := matches[1]
+				value := matches[2]
+				line = fmt.Sprintf("#if defined(__NEED_struct_%s) && !defined(__DEFINED_struct_%s)\nstruct %s %s;\n#define __DEFINED_struct_%s\n#endif\n", name, name, name, value, name)
+			}
+			_, err := f.WriteString(line + "\n")
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return f.Close()
+}
+
 var libMusl = Library{
 	name: "musl",
 	makeHeaders: func(target, includeDir string) error {
@@ -24,41 +63,13 @@ var libMusl = Library{
 		arch := compileopts.MuslArchitecture(target)
 		muslDir := filepath.Join(goenv.Get("TINYGOROOT"), "lib", "musl")
 
-		// Create the file alltypes.h.
-		f, err := os.Create(filepath.Join(bits, "alltypes.h"))
+		err = buildMuslAllTypes(arch, muslDir, bits)
 		if err != nil {
 			return err
 		}
-		infiles := []string{
-			filepath.Join(muslDir, "arch", arch, "bits", "alltypes.h.in"),
-			filepath.Join(muslDir, "include", "alltypes.h.in"),
-		}
-		for _, infile := range infiles {
-			data, err := os.ReadFile(infile)
-			if err != nil {
-				return err
-			}
-			lines := strings.Split(string(data), "\n")
-			for _, line := range lines {
-				if strings.HasPrefix(line, "TYPEDEF ") {
-					matches := regexp.MustCompile(`TYPEDEF (.*) ([^ ]*);`).FindStringSubmatch(line)
-					value := matches[1]
-					name := matches[2]
-					line = fmt.Sprintf("#if defined(__NEED_%s) && !defined(__DEFINED_%s)\ntypedef %s %s;\n#define __DEFINED_%s\n#endif\n", name, name, value, name, name)
-				}
-				if strings.HasPrefix(line, "STRUCT ") {
-					matches := regexp.MustCompile(`STRUCT * ([^ ]*) (.*);`).FindStringSubmatch(line)
-					name := matches[1]
-					value := matches[2]
-					line = fmt.Sprintf("#if defined(__NEED_struct_%s) && !defined(__DEFINED_struct_%s)\nstruct %s %s;\n#define __DEFINED_struct_%s\n#endif\n", name, name, name, value, name)
-				}
-				f.WriteString(line + "\n")
-			}
-		}
-		f.Close()
 
 		// Create the file syscall.h.
-		f, err = os.Create(filepath.Join(bits, "syscall.h"))
+		f, err := os.Create(filepath.Join(bits, "syscall.h"))
 		if err != nil {
 			return err
 		}

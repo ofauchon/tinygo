@@ -73,14 +73,6 @@ commands:
             - go-cache-v4-{{ checksum "go.mod" }}
       - llvm-source-linux
       - run: go install -tags=llvm<<parameters.llvm>> .
-      - restore_cache:
-          keys:
-            - wasi-libc-sysroot-systemclang-v7
-      - run: make wasi-libc
-      - save_cache:
-          key: wasi-libc-sysroot-systemclang-v7
-          paths:
-            - lib/wasi-libc/sysroot
       - when:
           condition: <<parameters.fmt-check>>
           steps:

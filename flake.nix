@@ -21,7 +21,6 @@
 #   make llvm-source            # fetch compiler-rt
 #   git submodule update --init # fetch lots of other libraries and SVD files
 #   make gen-device -j4         # build src/device/*/*.go files
-#   make wasi-libc              # build support for wasi/wasm
 #
 # With this, you should have an environment that can compile anything - except
 # for the Xtensa architecture (ESP8266/ESP32) because support for that lives in
@@ -64,14 +63,6 @@
             #openocd
           ];
           shellHook= ''
-            # Configure CLANG, LLVM_AR, and LLVM_NM for `make wasi-libc`.
-            # Without setting these explicitly, Homebrew versions might be used
-            # or the default `ar` and `nm` tools might be used (which don't
-            # support wasi).
-            export CLANG="clang-18 -resource-dir ${llvmPackages_18.clang.cc.lib}/lib/clang/18"
-            export LLVM_AR=llvm-ar
-            export LLVM_NM=llvm-nm
-
             # Make `make smoketest` work (the default is `md5`, while Nix only
             # has `md5sum`).
             export MD5SUM=md5sum

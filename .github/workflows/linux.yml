@@ -104,15 +104,6 @@ jobs:
         run: |
           apk add cmake samurai python3
           make binaryen STATIC=1
-      - name: Cache wasi-libc
-        uses: actions/cache@v4
-        id: cache-wasi-libc
-        with:
-          key: wasi-libc-sysroot-linux-alpine-v2
-          path: lib/wasi-libc/sysroot
-      - name: Build wasi-libc
-        if: steps.cache-wasi-libc.outputs.cache-hit != 'true'
-        run: make wasi-libc
       - name: Install fpm
         run: |
           gem install --version 4.0.7 public_suffix
@@ -258,15 +249,6 @@ jobs:
       - name: Build Binaryen
         if: steps.cache-binaryen.outputs.cache-hit != 'true'
         run: make binaryen
-      - name: Cache wasi-libc
-        uses: actions/cache@v4
-        id: cache-wasi-libc
-        with:
-          key: wasi-libc-sysroot-linux-asserts-v6
-          path: lib/wasi-libc/sysroot
-      - name: Build wasi-libc
-        if: steps.cache-wasi-libc.outputs.cache-hit != 'true'
-        run: make wasi-libc
       - run: make gen-device -j4
       - name: Test TinyGo
         run: make ASSERT=1 test
