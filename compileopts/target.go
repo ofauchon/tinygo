@@ -178,6 +178,21 @@ func (spec *TargetSpec) resolveInherits() error {
 
 // Load a target specification.
 func LoadTarget(options *Options) (*TargetSpec, error) {
+	if options.Target == "" && options.GOARCH == "wasm" {
+		// Set a specific target if we're building from a known GOOS/GOARCH
+		// combination that is defined in a target JSON file.
+		switch options.GOOS {
+		case "js":
+			options.Target = "wasm"
+		case "wasip1":
+			options.Target = "wasip1"
+		case "wasip2":
+			options.Target = "wasip2"
+		default:
+			return nil, errors.New("GOARCH=wasm but GOOS is not set correctly. Please set GOOS to wasm, wasip1, or wasip2.")
+		}
+	}
+
 	if options.Target == "" {
 		return defaultTarget(options)
 	}

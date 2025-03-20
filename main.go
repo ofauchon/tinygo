@@ -1684,24 +1684,9 @@ func main() {
 			usage(command)
 			os.Exit(1)
 		}
-		if options.Target == "" {
-			switch {
-			case options.GOARCH == "wasm":
-				switch options.GOOS {
-				case "js":
-					options.Target = "wasm"
-				case "wasip1":
-					options.Target = "wasip1"
-				case "wasip2":
-					options.Target = "wasip2"
-				default:
-					fmt.Fprintln(os.Stderr, "GOARCH=wasm but GOOS is not set correctly. Please set GOOS to wasm, wasip1, or wasip2.")
-					os.Exit(1)
-				}
-			case filepath.Ext(outpath) == ".wasm":
-				fmt.Fprintln(os.Stderr, "you appear to want to build a wasm file, but have not specified either a target flag, or the GOARCH/GOOS to use.")
-				os.Exit(1)
-			}
+		if filepath.Ext(outpath) == ".wasm" && options.GOARCH != "wasm" && options.Target == "" {
+			fmt.Fprintln(os.Stderr, "you appear to want to build a wasm file, but have not specified either a target flag, or the GOARCH/GOOS to use.")
+			os.Exit(1)
 		}
 
 		err := Build(pkgName, outpath, options)
