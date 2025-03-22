@@ -25,6 +25,7 @@ var BoehmGC = Library{
 			"-DALL_INTERIOR_POINTERS",  // scan interior pointers (needed for Go)
 			"-DIGNORE_DYNAMIC_LOADING", // we don't support dynamic loading at the moment
 			"-DNO_GETCONTEXT",          // musl doesn't support getcontext()
+			"-DGC_DISABLE_INCREMENTAL", // don't mess with SIGSEGV and such
 
 			// Use a minimal environment.
 			"-DNO_MSGBOX_ON_ERROR", // don't call MessageBoxA on Windows
@@ -68,8 +69,6 @@ var BoehmGC = Library{
 			"new_hblk.c",
 			"obj_map.c",
 			"os_dep.c",
-			"pthread_stop_world.c",
-			"pthread_support.c",
 			"reclaim.c",
 		}
 		if strings.Split(target, "-")[2] == "windows" {

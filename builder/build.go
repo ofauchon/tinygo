@@ -150,8 +150,8 @@ func Build(pkgName, outpath, tmpdir string, config *compileopts.Config) (BuildRe
 	var libcJob *compileJob
 	switch config.Target.Libc {
 	case "darwin-libSystem":
-		job := makeDarwinLibSystemJob(config, tmpdir)
-		libcDependencies = append(libcDependencies, job)
+		libcJob = makeDarwinLibSystemJob(config, tmpdir)
+		libcDependencies = append(libcDependencies, libcJob)
 	case "musl":
 		var unlock func()
 		libcJob, unlock, err = libMusl.load(config, tmpdir, nil)

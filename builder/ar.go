@@ -3,6 +3,7 @@ package builder
 import (
 	"bytes"
 	"debug/elf"
+	"debug/macho"
 	"debug/pe"
 	"encoding/binary"
 	"errors"
@@ -57,6 +58,20 @@ func makeArchive(arfile *os.File, objs []string) error {
 					continue
 				}
 				// Include in archive.
+				symbolTable = append(symbolTable, struct {
+					name      string
+					fileIndex int
+				}{symbol.Name, i})
+			}
+		} else if dbg, err := macho.NewFile(objfile); err == nil {
+			for _, symbol := range dbg.Symtab.Syms {
+				// See mach-o/nlist.h
+				if symbol.Type&0x0e != 0xe { // (symbol.Type & N_TYPE) != N_SECT
+					continue // undefined symbol
+				}
+				if symbol.Type&0x01 == 0 { // (symbol.Type & N_EXT) == 0
+					continue // internal symbol (static, etc)
+				}
 				symbolTable = append(symbolTable, struct {
 					name      string
 					fileIndex int

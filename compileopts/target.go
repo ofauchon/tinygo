@@ -380,7 +380,7 @@ func defaultTarget(options *Options) (*TargetSpec, error) {
 	llvmvendor := "unknown"
 	switch options.GOOS {
 	case "darwin":
-		spec.GC = "precise"
+		spec.GC = "boehm"
 		platformVersion := "10.12.0"
 		if options.GOARCH == "arm64" {
 			platformVersion = "11.0.0" // first macosx platform with arm64 support
