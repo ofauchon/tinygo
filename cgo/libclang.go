@@ -71,7 +71,7 @@ unsigned tinygo_clang_Cursor_isMacroFunctionLike(GoCXCursor c);
 //     libclang.go:68:5: note: previous declaration is here
 // See: https://github.com/golang/go/issues/49721
 #if defined(_WIN32)
-#define CGO_DECL // __declspec(dllexport)
+#define CGO_DECL __declspec(dllexport)
 #else
 #define CGO_DECL
 #endif
