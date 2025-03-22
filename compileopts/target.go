@@ -427,7 +427,7 @@ func defaultTarget(options *Options) (*TargetSpec, error) {
 			"src/runtime/runtime_unix.c",
 			"src/runtime/signal.c")
 	case "windows":
-		spec.GC = "precise"
+		spec.GC = "boehm"
 		spec.Linker = "ld.lld"
 		spec.Libc = "mingw-w64"
 		// Note: using a medium code model, low image base and no ASLR

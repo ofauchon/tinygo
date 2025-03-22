@@ -1007,6 +1007,7 @@ endif
 	@cp -rp lib/mingw-w64/mingw-w64-crt/stdio/ucrt_*                build/release/tinygo/lib/mingw-w64/mingw-w64-crt/stdio
 	@cp -rp lib/mingw-w64/mingw-w64-headers/crt/                    build/release/tinygo/lib/mingw-w64/mingw-w64-headers
 	@cp -rp lib/mingw-w64/mingw-w64-headers/defaults/include        build/release/tinygo/lib/mingw-w64/mingw-w64-headers/defaults
+	@cp -rp lib/mingw-w64/mingw-w64-headers/include                 build/release/tinygo/lib/mingw-w64/mingw-w64-headers
 	@cp -rp lib/nrfx/*                   build/release/tinygo/lib/nrfx
 	@cp -rp lib/picolibc/newlib/libc/ctype       build/release/tinygo/lib/picolibc/newlib/libc
 	@cp -rp lib/picolibc/newlib/libc/include     build/release/tinygo/lib/picolibc/newlib/libc

@@ -182,12 +182,13 @@ func Build(pkgName, outpath, tmpdir string, config *compileopts.Config) (BuildRe
 		defer unlock()
 		libcDependencies = append(libcDependencies, libcJob)
 	case "mingw-w64":
-		job, unlock, err := libMinGW.load(config, tmpdir, nil)
+		var unlock func()
+		libcJob, unlock, err = libMinGW.load(config, tmpdir, nil)
 		if err != nil {
 			return BuildResult{}, err
 		}
 		defer unlock()
-		libcDependencies = append(libcDependencies, job)
+		libcDependencies = append(libcDependencies, libcJob)
 		libcDependencies = append(libcDependencies, makeMinGWExtraLibs(tmpdir, config.GOARCH())...)
 	case "":
 		// no library specified, so nothing to do

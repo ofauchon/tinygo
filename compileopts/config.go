@@ -395,8 +395,10 @@ func (c *Config) LibcCFlags() []string {
 			"-nostdlibinc",
 			"-isystem", filepath.Join(path, "include"),
 			"-isystem", filepath.Join(root, "lib", "mingw-w64", "mingw-w64-headers", "crt"),
+			"-isystem", filepath.Join(root, "lib", "mingw-w64", "mingw-w64-headers", "include"),
 			"-isystem", filepath.Join(root, "lib", "mingw-w64", "mingw-w64-headers", "defaults", "include"),
 			"-D_UCRT",
+			"-D_WIN32_WINNT=0x0a00", // target Windows 10
 		}
 	case "":
 		// No libc specified, nothing to add.
