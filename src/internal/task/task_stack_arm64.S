@@ -2,7 +2,6 @@
 .global  _tinygo_startTask
 _tinygo_startTask:
 #else
-.section .text.tinygo_startTask
 .global  tinygo_startTask
 tinygo_startTask:
 #endif
