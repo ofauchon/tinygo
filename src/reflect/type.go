@@ -499,3 +499,33 @@ type StructTag = reflectlite.StructTag
 func TypeFor[T any]() Type {
 	return toType(reflectlite.TypeFor[T]())
 }
+
+func SliceOf(t Type) Type {
+	return toType(reflectlite.SliceOf(toRawType(t)))
+}
+
+func ArrayOf(n int, t Type) Type {
+	return toType(reflectlite.ArrayOf(n, toRawType(t)))
+}
+
+func StructOf([]StructField) Type {
+	return toType(reflectlite.StructOf([]reflectlite.StructField{}))
+}
+
+func MapOf(key, value Type) Type {
+	return toType(reflectlite.MapOf(toRawType(key), toRawType(value)))
+}
+
+func FuncOf(in, out []Type, variadic bool) Type {
+	rawIn := make([]reflectlite.Type, len(in))
+	for i, t := range in {
+		rawIn[i] = toRawType(t)
+	}
+
+	rawOut := make([]reflectlite.Type, len(out))
+	for i, t := range out {
+		rawOut[i] = toRawType(t)
+	}
+
+	return toType(reflectlite.FuncOf(rawIn, rawOut, variadic))
+}
