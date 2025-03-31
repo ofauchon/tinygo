@@ -445,8 +445,8 @@ TEST_PACKAGES_NONBAREMETAL = \
 	$(nil)
 
 # Report platforms on which each standard library package is known to pass tests
-jointmp := $(shell echo /tmp/join.$$$$)
 report-stdlib-tests-pass:
+	$(eval jointmp := $(shell echo /tmp/join.$$$$))
 	@for t in $(TEST_PACKAGES_DARWIN); do echo "$$t darwin"; done | sort > $(jointmp).darwin
 	@for t in $(TEST_PACKAGES_LINUX); do echo "$$t linux"; done | sort > $(jointmp).linux
 	@for t in $(TEST_PACKAGES_FAST) $(TEST_PACKAGES_SLOW); do echo "$$t darwin linux wasi windows"; done | sort > $(jointmp).portable
