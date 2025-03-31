@@ -8,11 +8,22 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/google/shlex"
 	"github.com/tinygo-org/tinygo/goenv"
 )
+
+// Library versions. Whenever an existing library is changed, this number should
+// be added/increased so that existing caches are invalidated.
+//
+// (This is a bit of a layering violation, this should really be part of the
+// builder.Library struct but that's hard to do since we want to know the
+// library path in advance in several places).
+var libVersions = map[string]int{
+	"musl": 2,
+}
 
 // Config keeps all configuration affecting the build in a single struct.
 type Config struct {
@@ -247,9 +258,9 @@ func MuslArchitecture(triple string) string {
 	return CanonicalArchName(triple)
 }
 
-// LibcPath returns the path to the libc directory. The libc path will be a libc
-// path in the cache directory (which might not yet be built).
-func (c *Config) LibcPath(name string) string {
+// LibraryPath returns the path to the library build directory. The path will be
+// a library path in the cache directory (which might not yet be built).
+func (c *Config) LibraryPath(name string) string {
 	archname := c.Triple()
 	if c.CPU() != "" {
 		archname += "-" + c.CPU()
@@ -263,6 +274,11 @@ func (c *Config) LibcPath(name string) string {
 	if name == "bdwgc" {
 		// Boehm GC is compiled against a particular libc.
 		archname += "-" + c.Target.Libc
+	}
+
+	// Append a version string, if this library has a version.
+	if v, ok := libVersions[name]; ok {
+		archname += "-v" + strconv.Itoa(v)
 	}
 
 	// No precompiled library found. Determine the path name that will be used
@@ -351,7 +367,7 @@ func (c *Config) LibcCFlags() []string {
 	case "picolibc":
 		root := goenv.Get("TINYGOROOT")
 		picolibcDir := filepath.Join(root, "lib", "picolibc", "newlib", "libc")
-		path := c.LibcPath("picolibc")
+		path := c.LibraryPath("picolibc")
 		return []string{
 			"-nostdlibinc",
 			"-isystem", filepath.Join(path, "include"),
@@ -361,7 +377,7 @@ func (c *Config) LibcCFlags() []string {
 		}
 	case "musl":
 		root := goenv.Get("TINYGOROOT")
-		path := c.LibcPath("musl")
+		path := c.LibraryPath("musl")
 		arch := MuslArchitecture(c.Triple())
 		return []string{
 			"-nostdlibinc",
@@ -371,7 +387,7 @@ func (c *Config) LibcCFlags() []string {
 			"-isystem", filepath.Join(root, "lib", "musl", "include"),
 		}
 	case "wasi-libc":
-		path := c.LibcPath("wasi-libc")
+		path := c.LibraryPath("wasi-libc")
 		return []string{
 			"-nostdlibinc",
 			"-isystem", filepath.Join(path, "include"),
@@ -381,7 +397,7 @@ func (c *Config) LibcCFlags() []string {
 		return nil
 	case "mingw-w64":
 		root := goenv.Get("TINYGOROOT")
-		path := c.LibcPath("mingw-w64")
+		path := c.LibraryPath("mingw-w64")
 		return []string{
 			"-nostdlibinc",
 			"-isystem", filepath.Join(path, "include"),
