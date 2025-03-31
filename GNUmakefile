@@ -44,14 +44,10 @@ TINYGO ?= $(call detect,tinygo,tinygo $(CURDIR)/build/tinygo)
 
 # Check for ccache if the user hasn't set it to on or off.
 ifeq (, $(CCACHE))
-    # Use CCACHE for LLVM if possible
-    ifneq (, $(shell command -v ccache 2> /dev/null))
-        CCACHE := ON
-    else
-        CCACHE := OFF
-    endif
+    LLVM_OPTION += '-DLLVM_CCACHE_BUILD=$(if $(shell command -v ccache 2> /dev/null),ON,OFF)'
+else
+    LLVM_OPTION += '-DLLVM_CCACHE_BUILD=$(CCACHE)'
 endif
-LLVM_OPTION += '-DLLVM_CCACHE_BUILD=$(CCACHE)'
 
 # Allow enabling LLVM assertions
 ifeq (1, $(ASSERT))
