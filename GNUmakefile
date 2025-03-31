@@ -8,13 +8,20 @@ LLVM_PROJECTDIR ?= llvm-project
 CLANG_SRC ?= $(LLVM_PROJECTDIR)/clang
 LLD_SRC ?= $(LLVM_PROJECTDIR)/lld
 
+ifeq ($(OS),Windows_NT)
+    # avoid calling uname on Windows
+    uname := Windows_NT
+else
+    uname := $(shell uname -s)
+endif
+
 # Try to autodetect LLVM build tools.
 # Versions are listed here in descending priority order.
 LLVM_VERSIONS = 19 18 17 16 15
 errifempty = $(if $(1),$(1),$(error $(2)))
 detect = $(shell which $(call errifempty,$(firstword $(foreach p,$(2),$(shell command -v $(p) 2> /dev/null && echo $(p)))),failed to locate $(1) at any of: $(2)))
 toolSearchPathsVersion = $(1)-$(2)
-ifeq ($(shell uname -s),Darwin)
+ifeq ($(uname),Darwin)
 	# Also explicitly search Brew's copy, which is not in PATH by default.
 	BREW_PREFIX := $(shell brew --prefix)
 	toolSearchPathsVersion += $(BREW_PREFIX)/opt/llvm@$(2)/bin/$(1)-$(2) $(BREW_PREFIX)/opt/llvm@$(2)/bin/$(1)
@@ -127,14 +134,14 @@ ifeq ($(OS),Windows_NT)
 
     USE_SYSTEM_BINARYEN ?= 1
 
-else ifeq ($(shell uname -s),Darwin)
+else ifeq ($(uname),Darwin)
     MD5SUM ?= md5
 
     CGO_LDFLAGS += -lxar
 
     USE_SYSTEM_BINARYEN ?= 1
 
-else ifeq ($(shell uname -s),FreeBSD)
+else ifeq ($(uname),FreeBSD)
     MD5SUM ?= md5
     START_GROUP = -Wl,--start-group
     END_GROUP = -Wl,--end-group
@@ -449,11 +456,11 @@ report-stdlib-tests-pass:
 	@rm $(jointmp).*
 
 # Standard library packages that pass tests quickly on the current platform
-ifeq ($(shell uname),Darwin)
+ifeq ($(uname),Darwin)
 TEST_PACKAGES_HOST := $(TEST_PACKAGES_FAST) $(TEST_PACKAGES_DARWIN)
 TEST_IOFS := true
 endif
-ifeq ($(shell uname),Linux)
+ifeq ($(uname),Linux)
 TEST_PACKAGES_HOST := $(TEST_PACKAGES_FAST) $(TEST_PACKAGES_LINUX)
 TEST_IOFS := true
 endif
