@@ -34,7 +34,6 @@ LLVM_NM ?= $(call findLLVMTool,llvm-nm)
 
 # Go binary and GOROOT to select
 GO ?= go
-export GOROOT = $(shell $(GO) env GOROOT)
 
 # Flags to pass to go test.
 GOTESTFLAGS ?=
