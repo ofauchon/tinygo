@@ -1492,7 +1492,7 @@ func main() {
 	command := os.Args[1]
 
 	opt := flag.String("opt", "z", "optimization level: 0, 1, 2, s, z")
-	gc := flag.String("gc", "", "garbage collector to use (none, leaking, conservative)")
+	gc := flag.String("gc", "", "garbage collector to use (none, leaking, conservative, custom, precise, boehm)")
 	panicStrategy := flag.String("panic", "print", "panic strategy (print, trap)")
 	scheduler := flag.String("scheduler", "", "which scheduler to use (none, tasks, asyncify)")
 	serial := flag.String("serial", "", "which serial output to use (none, uart, usb, rtt)")
