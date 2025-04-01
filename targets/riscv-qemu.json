@@ -4,5 +4,5 @@
 	"build-tags": ["virt", "qemu"],
 	"default-stack-size": 8192,
 	"linkerscript": "targets/riscv-qemu.ld",
-	"emulator": "qemu-system-riscv32 -machine virt -nographic -bios none -device virtio-rng-device -kernel {}"
+	"emulator": "qemu-system-riscv32 -machine virt,aclint=on -nographic -bios none -device virtio-rng-device -kernel {}"
 }
