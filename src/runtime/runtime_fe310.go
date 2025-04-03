@@ -38,10 +38,10 @@ func main() {
 
 	// Reset the MIE register and enable external interrupts.
 	// It must be reset here because it not zeroed at startup.
-	riscv.MIE.Set(1 << 11) // bit 11 is for machine external interrupts
+	riscv.MIE.Set(riscv.MIE_MEIE)
 
 	// Enable global interrupts now that they've been set up.
-	riscv.MSTATUS.SetBits(1 << 3) // MIE
+	riscv.MSTATUS.SetBits(riscv.MSTATUS_MIE) // MIE: machine external interrupts
 
 	preinit()
 	initPeripherals()
@@ -59,13 +59,13 @@ func handleInterrupt() {
 	if cause&(1<<31) != 0 {
 		// Topmost bit is set, which means that it is an interrupt.
 		switch code {
-		case 7: // Machine timer interrupt
+		case riscv.MachineTimerInterrupt:
 			// Signal timeout.
 			timerWakeup.Set(1)
 			// Disable the timer, to avoid triggering the interrupt right after
 			// this interrupt returns.
-			riscv.MIE.ClearBits(1 << 7) // MTIE bit
-		case 11: // Machine external interrupt
+			riscv.MIE.ClearBits(riscv.MIE_MTIE)
+		case riscv.MachineExternalInterrupt:
 			// Claim this interrupt.
 			id := sifive.PLIC.CLAIM.Get()
 			// Call the interrupt handler, if any is registered for this ID.
@@ -143,7 +143,7 @@ func sleepTicks(d timeUnit) {
 	target := uint64(ticks() + d)
 	sifive.CLINT.MTIMECMPH.Set(uint32(target >> 32))
 	sifive.CLINT.MTIMECMP.Set(uint32(target))
-	riscv.MIE.SetBits(1 << 7) // MTIE
+	riscv.MIE.SetBits(riscv.MIE_MTIE)
 	for {
 		if timerWakeup.Get() != 0 {
 			timerWakeup.Set(0)

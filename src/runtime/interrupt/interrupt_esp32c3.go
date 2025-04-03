@@ -189,13 +189,13 @@ func handleInterrupt() {
 		}
 
 		// enable CPU interrupts
-		riscv.MSTATUS.SetBits(1 << 3)
+		riscv.MSTATUS.SetBits(riscv.MSTATUS_MIE)
 
 		// Call registered interrupt handler(s)
 		callHandler(int(interruptNumber))
 
 		// disable CPU interrupts
-		riscv.MSTATUS.ClearBits(1 << 3)
+		riscv.MSTATUS.ClearBits(riscv.MSTATUS_MIE)
 
 		// restore interrupt threshold to enable interrupt again
 		reg.Set(thresholdSave)
@@ -207,7 +207,7 @@ func handleInterrupt() {
 
 		// do not enable CPU interrupts now
 		// the 'MRET' in src/device/riscv/handleinterrupt.S will copies the state of MPIE back into MIE, and subsequently clears MPIE.
-		// riscv.MSTATUS.SetBits(0x8)
+		// riscv.MSTATUS.SetBits(riscv.MSTATUS_MIE)
 	} else {
 		// Topmost bit is clear, so it is an exception of some sort.
 		// We could implement support for unsupported instructions here (such as
@@ -221,13 +221,13 @@ func handleException(mcause uintptr) {
 	println("*** Exception:   code:", uint32(mcause&0x1f))
 	println("*** Exception: mcause:", mcause)
 	switch uint32(mcause & 0x1f) {
-	case 1:
+	case riscv.InstructionAccessFault:
 		println("***    virtual address:", riscv.MTVAL.Get())
-	case 2:
+	case riscv.IllegalInstruction:
 		println("***            opcode:", riscv.MTVAL.Get())
-	case 5:
+	case riscv.LoadAccessFault:
 		println("***      read address:", riscv.MTVAL.Get())
-	case 7:
+	case riscv.StoreOrAMOAccessFault:
 		println("***     write address:", riscv.MTVAL.Get())
 	}
 	for {
