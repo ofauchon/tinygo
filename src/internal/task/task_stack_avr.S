@@ -32,10 +32,10 @@ tinygo_startTask:
     // Note that they will probably not be able to run more than the main
     // goroutine anyway, but this file is compiled for all AVRs so it needs to
     // compile at least.
-    rcall  tinygo_pause
+    rcall  tinygo_task_exit
 #else
     // Other devices can (and must) use the regular call instruction.
-    call tinygo_pause
+    call tinygo_task_exit
 #endif
 
 .global tinygo_swapTask

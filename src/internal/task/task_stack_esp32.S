@@ -27,7 +27,7 @@ tinygo_startTask:
     callx4 a3
 
     // After return, exit this goroutine. This call never returns.
-    call4  tinygo_pause
+    call4  tinygo_task_exit
 
 .section .text.tinygo_swapTask,"ax",@progbits
 .global tinygo_swapTask

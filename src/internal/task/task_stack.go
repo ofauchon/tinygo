@@ -54,8 +54,9 @@ func Pause() {
 	currentTask.state.pause()
 }
 
-//export tinygo_pause
-func pause() {
+//export tinygo_task_exit
+func taskExit() {
+	// TODO: explicitly free the stack after switching back to the scheduler.
 	Pause()
 }
 

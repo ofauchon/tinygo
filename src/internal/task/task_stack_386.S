@@ -24,7 +24,7 @@ tinygo_startTask:
     addl $4, %esp
 
     // After return, exit this goroutine. This is a tail call.
-    jmp tinygo_pause
+    jmp tinygo_task_exit
     .cfi_endproc
 
 .global tinygo_swapTask

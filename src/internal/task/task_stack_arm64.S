@@ -27,9 +27,9 @@ tinygo_startTask:
 
     // After return, exit this goroutine. This is a tail call.
 #ifdef __MACH__
-    b     _tinygo_pause
+    b     _tinygo_task_exit
 #else
-    b     tinygo_pause
+    b     tinygo_task_exit
 #endif
     .cfi_endproc
 #ifndef __MACH__

@@ -28,7 +28,7 @@ tinygo_startTask:
     blx   r4
 
     // After return, exit this goroutine. This is a tail call.
-    bl    tinygo_pause
+    bl    tinygo_task_exit
     .cfi_endproc
 .size tinygo_startTask, .-tinygo_startTask
 

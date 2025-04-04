@@ -22,7 +22,7 @@ tinygo_startTask:
     nop
 
     // After return, exit this goroutine. This is a tail call.
-    j     tinygo_pause
+    j     tinygo_task_exit
     nop
 
 .section .text.tinygo_swapTask

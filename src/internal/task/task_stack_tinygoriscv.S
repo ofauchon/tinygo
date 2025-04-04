@@ -19,7 +19,7 @@ tinygo_startTask:
     jalr  s0
 
     // After return, exit this goroutine. This is a tail call.
-    tail  tinygo_pause
+    tail  tinygo_task_exit
 
 .section .text.tinygo_swapTask
 .global  tinygo_swapTask
