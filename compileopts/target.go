@@ -437,6 +437,8 @@ func defaultTarget(options *Options) (*TargetSpec, error) {
 		case "386":
 			spec.LDFlags = append(spec.LDFlags,
 				"-m", "i386pe",
+				"--major-os-version", "4",
+				"--major-subsystem-version", "4",
 			)
 			// __udivdi3 is not present in ucrt it seems.
 			spec.RTLib = "compiler-rt"

@@ -42,9 +42,23 @@ func __p___argc() *int32
 //export __p___argv
 func __p___argv() **unsafe.Pointer
 
+type startupInfo struct {
+	newMode int32
+}
+
+//export __getmainargs
+func __getmainargs(argc *int32, argv, env **unsafe.Pointer, doWildcard int, startInfo *startupInfo) int32
+
+var performanceFrequency int64
+
 //export mainCRTStartup
 func mainCRTStartup() int {
 	preinit()
+
+	// Obtain the (constant) performance frequency when needed.
+	if GOARCH == "386" {
+		_QueryPerformanceFrequency(&performanceFrequency)
+	}
 
 	// Obtain the initial stack pointer right before calling the run() function.
 	// The run function has been moved to a separate (non-inlined) function so
@@ -78,9 +92,19 @@ var args []string
 func os_runtime_args() []string {
 	if args == nil {
 		// Obtain argc/argv from the environment.
-		_configure_narrow_argv(2)
-		argc := *__p___argc()
-		argv := *__p___argv()
+		var argc int32
+		var argv *unsafe.Pointer
+		if GOARCH == "386" {
+			// MSVCRT.DLL
+			var env *unsafe.Pointer
+			startInfo := startupInfo{newMode: 0}
+			__getmainargs(&argc, &argv, &env, 1, &startInfo)
+		} else {
+			// UCRT
+			_configure_narrow_argv(2)
+			argc = *__p___argc()
+			argv = *__p___argv()
+		}
 
 		// Make args slice big enough so that it can store all command line
 		// arguments.
@@ -146,10 +170,30 @@ func sleepTicks(d timeUnit) {
 	}
 }
 
+//export QueryPerformanceFrequency
+func _QueryPerformanceFrequency(*int64) bool
+
+//export QueryPerformanceCounter
+func _QueryPerformanceCounter(*int64) bool
+
 func ticks() timeUnit {
-	var unbiasedTime uint64
-	_QueryUnbiasedInterruptTime(&unbiasedTime)
-	return timeUnit(unbiasedTime)
+	if GOARCH == "386" {
+		// Unfortunately QueryUnbiasedInterruptTime is only available starting
+		// with Windows 7.
+
+		// Obtain counter (that runs at a fixed frequency).
+		var counter int64
+		_QueryPerformanceCounter(&counter)
+		// Convert this counter to ticks of 100ns (just like
+		// QueryUnbiasedInterruptTime).
+		// (We could also change the definition of ticks on GOOS=386 but that
+		// seems messy).
+		return timeUnit((counter * 10000000) / performanceFrequency)
+	} else {
+		var unbiasedTime uint64
+		_QueryUnbiasedInterruptTime(&unbiasedTime)
+		return timeUnit(unbiasedTime)
+	}
 }
 
 //go:linkname now time.now
@@ -237,17 +281,16 @@ func procUnpin() {
 }
 
 func hardwareRand() (n uint64, ok bool) {
-	var n1, n2 uint32
-	errCode1 := libc_rand_s(&n1)
-	errCode2 := libc_rand_s(&n2)
-	n = uint64(n1)<<32 | uint64(n2)
-	ok = errCode1 == 0 && errCode2 == 0
+	// Use the old RtlGenRandom, introduced in Windows XP.
+	// See the rationale in src/crypto/rand/rand_windows.go for why we use this
+	// one.
+	ok = _RtlGenRandom(unsafe.Pointer(&n), 8)
 	return
 }
 
-// Cryptographically secure random number generator.
-// https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/rand-s?view=msvc-170
-// errno_t rand_s(unsigned int* randomValue);
+// This function is part of advapi32.dll, and is called SystemFunction036 for
+// some reason. It's available on Windows XP and newer.
+// See: https://learn.microsoft.com/en-us/windows/win32/api/ntsecapi/nf-ntsecapi-rtlgenrandom
 //
-//export rand_s
-func libc_rand_s(randomValue *uint32) int32
+//export SystemFunction036
+func _RtlGenRandom(buf unsafe.Pointer, len int) bool

@@ -398,15 +398,25 @@ func (c *Config) LibcCFlags() []string {
 	case "mingw-w64":
 		root := goenv.Get("TINYGOROOT")
 		path := c.LibraryPath("mingw-w64")
-		return []string{
+		cflags := []string{
 			"-nostdlibinc",
 			"-isystem", filepath.Join(path, "include"),
 			"-isystem", filepath.Join(root, "lib", "mingw-w64", "mingw-w64-headers", "crt"),
 			"-isystem", filepath.Join(root, "lib", "mingw-w64", "mingw-w64-headers", "include"),
 			"-isystem", filepath.Join(root, "lib", "mingw-w64", "mingw-w64-headers", "defaults", "include"),
-			"-D_UCRT",
-			"-D_WIN32_WINNT=0x0a00", // target Windows 10
 		}
+		if c.GOARCH() == "386" {
+			cflags = append(cflags,
+				"-D__MSVCRT_VERSION__=0x700", // Microsoft Visual C++ .NET 2002
+				"-D_WIN32_WINNT=0x0501",      // target Windows XP
+			)
+		} else {
+			cflags = append(cflags,
+				"-D_UCRT",
+				"-D_WIN32_WINNT=0x0a00", // target Windows 10
+			)
+		}
+		return cflags
 	case "":
 		// No libc specified, nothing to add.
 		return nil

@@ -3,6 +3,7 @@ package builder
 import (
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/tinygo-org/tinygo/compileopts"
 	"github.com/tinygo-org/tinygo/goenv"
@@ -201,6 +202,11 @@ var avrBuiltins = []string{
 	"avr/udivmodqi4.S",
 }
 
+// Builtins needed specifically for windows/386.
+var windowsI386Builtins = []string{
+	"i386/chkstk.S", // also _alloca
+}
+
 // libCompilerRT is a library with symbols required by programs compiled with
 // LLVM. These symbols are for operations that cannot be emitted with a single
 // instruction or a short sequence of instructions for that target.
@@ -229,6 +235,10 @@ var libCompilerRT = Library{
 			builtins = append(builtins, avrBuiltins...)
 		case "x86_64", "aarch64", "riscv64": // any 64-bit arch
 			builtins = append(builtins, genericBuiltins128...)
+		case "i386":
+			if strings.Split(target, "-")[2] == "windows" {
+				builtins = append(builtins, windowsI386Builtins...)
+			}
 		}
 		return builtins, nil
 	},
