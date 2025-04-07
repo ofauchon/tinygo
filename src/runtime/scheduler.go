@@ -4,8 +4,6 @@ import "internal/task"
 
 const schedulerDebug = false
 
-var mainExited bool
-
 var timerQueue *timerNode
 
 // Simple logging, for debugging.
