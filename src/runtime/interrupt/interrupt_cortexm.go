@@ -9,6 +9,9 @@ import (
 // Enable enables this interrupt. Right after calling this function, the
 // interrupt may be invoked if it was already pending.
 func (irq Interrupt) Enable() {
+	// Clear the ARM pending bit, an asserting device may still
+	// trigger the interrupt once enabled.
+	arm.ClearPendingIRQ(uint32(irq.num))
 	arm.EnableIRQ(uint32(irq.num))
 }
 
