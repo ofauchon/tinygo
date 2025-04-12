@@ -13,8 +13,6 @@ import (
 	"unsafe"
 )
 
-type timeUnit int64
-
 //export main
 func main() {
 

@@ -123,8 +123,6 @@ func preinit() {
 	heapEnd = heapStart + heapSize
 }
 
-type timeUnit int64
-
 var stackTop uintptr
 
 func ticksToNanoseconds(ticks timeUnit) int64 {

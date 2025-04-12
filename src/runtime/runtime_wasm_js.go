@@ -2,8 +2,6 @@
 
 package runtime
 
-type timeUnit int64
-
 var handleEvent func()
 
 //go:linkname setEventHandler syscall/js.setEventHandler

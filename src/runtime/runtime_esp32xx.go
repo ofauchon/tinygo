@@ -8,8 +8,6 @@ import (
 	"unsafe"
 )
 
-type timeUnit int64
-
 // Initialize .bss: zero-initialized global variables.
 // The .data section has already been loaded by the ROM bootloader.
 func clearbss() {

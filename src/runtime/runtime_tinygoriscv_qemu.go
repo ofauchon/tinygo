@@ -11,10 +11,6 @@ import (
 // This file implements the VirtIO RISC-V interface implemented in QEMU, which
 // is an interface designed for emulation.
 
-// One tick is 100ns by default in QEMU.
-// (This is not a standard, just the default used by QEMU).
-type timeUnit int64
-
 //export main
 func main() {
 	preinit()
@@ -61,6 +57,8 @@ func handleInterrupt() {
 	riscv.MCAUSE.Set(0)
 }
 
+// One tick is 100ns by default in QEMU.
+// (This is not a standard, just the default used by QEMU).
 func ticksToNanoseconds(ticks timeUnit) int64 {
 	return int64(ticks) * 100 // one tick is 100ns
 }

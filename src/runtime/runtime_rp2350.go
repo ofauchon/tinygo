@@ -14,8 +14,6 @@ func machineTicks() uint64
 // machineLightSleep is provided by package machine.
 func machineLightSleep(uint64)
 
-type timeUnit int64
-
 // ticks returns the number of ticks (microseconds) elapsed since power up.
 func ticks() timeUnit {
 	t := machineTicks()

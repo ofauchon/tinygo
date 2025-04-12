@@ -14,8 +14,6 @@ import (
 	"runtime/volatile"
 )
 
-type timeUnit int64
-
 //export main
 func main() {
 	// Zero the PLIC enable bits on startup: they are not zeroed at reset.

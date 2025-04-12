@@ -11,8 +11,6 @@ import (
 	"runtime/volatile"
 )
 
-type timeUnit int64
-
 //go:linkname systemInit SystemInit
 func systemInit()
 

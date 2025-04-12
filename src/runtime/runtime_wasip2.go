@@ -12,8 +12,6 @@ import (
 	"internal/cm"
 )
 
-type timeUnit int64
-
 func init() {
 	wasiclirun.Exports.Run = func() cm.BoolResult {
 		callMain()

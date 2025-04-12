@@ -12,8 +12,6 @@ import (
 	"unsafe"
 )
 
-type timeUnit int64
-
 //export Reset_Handler
 func main() {
 	preinit()

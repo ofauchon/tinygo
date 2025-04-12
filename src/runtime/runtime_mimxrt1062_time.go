@@ -10,8 +10,6 @@ import (
 	"unsafe"
 )
 
-type timeUnit int64
-
 const (
 	lastCycle      = SYSTICK_FREQ/1000 - 1
 	cyclesPerMicro = CORE_FREQ / 1000000

@@ -22,8 +22,6 @@ import (
 	"runtime/volatile"
 )
 
-type timeUnit int64
-
 //export main
 func main() {
 	// Initialize RTC.

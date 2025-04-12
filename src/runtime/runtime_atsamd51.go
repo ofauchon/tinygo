@@ -11,8 +11,6 @@ import (
 	"runtime/volatile"
 )
 
-type timeUnit int64
-
 //export Reset_Handler
 func main() {
 	arm.SCB.CPACR.Set(0) // disable FPU if it is enabled

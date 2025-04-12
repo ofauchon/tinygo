@@ -12,9 +12,6 @@ import (
 
 const BOARD = "arduino"
 
-// timeUnit in nanoseconds
-type timeUnit int64
-
 // Watchdog timer periods. These can be off by a large margin (hence the jump
 // between 64ms and 125ms which is not an exact double), so don't rely on this
 // for accurate time keeping.

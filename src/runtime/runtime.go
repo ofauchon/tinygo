@@ -8,6 +8,17 @@ import (
 
 const Compiler = "tinygo"
 
+// Unit for the 'ticks' and 'sleepTicks' functions.
+//
+// This is the native time unit for the given system. One timeUnit tick might be
+// 1ns or 100ns on a desktop system, or 1/32768s on baremetal systems with a
+// low-power RTC. Many other tick durations are possible.
+//
+// Conversion from time units to nanoseconds and back is done using
+// ticksToNanoseconds and nanosecondsToTicks, which need to be implemented for
+// each system as needed.
+type timeUnit int64
+
 // The compiler will fill this with calls to the initialization function of each
 // package.
 func initAll()
