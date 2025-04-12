@@ -62,12 +62,15 @@ func main() {
 	time.Sleep(2 * time.Millisecond)
 
 	var m sync.Mutex
+	var wg sync.WaitGroup
 	m.Lock()
 	println("pre-acquired mutex")
-	go acquire(&m)
+	wg.Add(1)
+	go acquire(&m, &wg)
 	time.Sleep(2 * time.Millisecond)
 	println("releasing mutex")
 	m.Unlock()
+	wg.Wait()
 	time.Sleep(2 * time.Millisecond)
 	m.Lock()
 	println("re-acquired mutex")
@@ -89,8 +92,9 @@ func main() {
 	<-done
 }
 
-func acquire(m *sync.Mutex) {
+func acquire(m *sync.Mutex, wg *sync.WaitGroup) {
 	m.Lock()
+	wg.Done()
 	println("acquired mutex from goroutine")
 	time.Sleep(2 * time.Millisecond)
 	println("releasing mutex from goroutine")
