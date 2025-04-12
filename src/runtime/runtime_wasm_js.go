@@ -2,7 +2,7 @@
 
 package runtime
 
-type timeUnit float64 // time in milliseconds, just like Date.now() in JavaScript
+type timeUnit int64
 
 var handleEvent func()
 
@@ -11,17 +11,16 @@ func setEventHandler(fn func()) {
 	handleEvent = fn
 }
 
+// We use 1ns per tick, to simplify things.
+// It would probably be fine to use 1µs per tick, since performance.now only
+// promises a resolution of 5µs, but 1ns makes the conversions here a bit more
+// straightforward (since nothing needs to be converted).
 func ticksToNanoseconds(ticks timeUnit) int64 {
-	// The JavaScript API works in float64 milliseconds, so convert to
-	// nanoseconds first before converting to a timeUnit (which is a float64),
-	// to avoid precision loss.
-	return int64(ticks * 1e6)
+	return int64(ticks)
 }
 
 func nanosecondsToTicks(ns int64) timeUnit {
-	// The JavaScript API works in float64 milliseconds, so convert to timeUnit
-	// (which is a float64) first before dividing, to avoid precision loss.
-	return timeUnit(ns) / 1e6
+	return timeUnit(ns)
 }
 
 // This function is called by the scheduler.
