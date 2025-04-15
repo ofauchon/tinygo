@@ -252,6 +252,8 @@ func SendUSBInPacket(ep uint32, data []byte) bool {
 	return true
 }
 
+// Prevent file size increases: https://github.com/tinygo-org/tinygo/pull/998
+//
 //go:noinline
 func sendUSBPacket(ep uint32, data []byte, maxsize uint16) {
 	count := len(data)
