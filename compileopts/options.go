@@ -43,6 +43,7 @@ type Options struct {
 	PrintCommands   func(cmd string, args ...string) `json:"-"`
 	Semaphore       chan struct{}                    `json:"-"` // -p flag controls cap
 	Debug           bool
+	Nobounds        bool
 	PrintSizes      string
 	PrintAllocs     *regexp.Regexp // regexp string
 	PrintStacks     bool

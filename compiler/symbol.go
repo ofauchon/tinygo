@@ -438,6 +438,10 @@ func (c *compilerContext) parsePragmas(info *functionInfo, f *ssa.Function) {
 			}
 		}
 	}
+
+	if c.Nobounds {
+		info.nobounds = true
+	}
 }
 
 // Check whether this function can be used in //go:wasmimport or

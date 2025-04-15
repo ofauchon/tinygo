@@ -58,6 +58,7 @@ type Config struct {
 	MaxStackAlloc      uint64
 	NeedsStackObjects  bool
 	Debug              bool // Whether to emit debug information in the LLVM module.
+	Nobounds           bool // Whether to skip bounds checks
 	PanicStrategy      string
 }
 
