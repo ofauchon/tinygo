@@ -67,7 +67,7 @@ func handleUSBIRQ(intr interrupt.Interrupt) {
 
 		if !ok {
 			// Stall endpoint?
-			sendStallViaEPIn(0)
+			USBDev.SetStallEPIn(0)
 		}
 
 	}

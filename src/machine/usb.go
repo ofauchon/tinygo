@@ -123,6 +123,7 @@ var (
 	usbTxHandler    [usb.NumberOfEndpoints]func()
 	usbRxHandler    [usb.NumberOfEndpoints]func([]byte)
 	usbSetupHandler [usb.NumberOfInterfaces]func(usb.Setup) bool
+	usbStallHandler [usb.NumberOfEndpoints]func(usb.Setup) bool
 
 	endPoints = []uint32{
 		usb.CONTROL_ENDPOINT:  usb.ENDPOINT_TYPE_CONTROL,
@@ -212,6 +213,12 @@ func handleStandardSetup(setup usb.Setup) bool {
 		if setup.WValueL == 1 { // DEVICEREMOTEWAKEUP
 			isRemoteWakeUpEnabled = false
 		} else if setup.WValueL == 0 { // ENDPOINTHALT
+			if idx := setup.WIndex & 0x7F; idx < usb.NumberOfEndpoints && usbStallHandler[idx] != nil {
+				// Host has requested to clear an endpoint stall. If the request is addressed to
+				// an endpoint with a configured StallHandler, forward the message on.
+				// The 0x7F mask is used to clear the direction bit from the endpoint number
+				return usbStallHandler[idx](setup)
+			}
 			isEndpointHalt = false
 		}
 		SendZlp()
@@ -221,6 +228,12 @@ func handleStandardSetup(setup usb.Setup) bool {
 		if setup.WValueL == 1 { // DEVICEREMOTEWAKEUP
 			isRemoteWakeUpEnabled = true
 		} else if setup.WValueL == 0 { // ENDPOINTHALT
+			if idx := setup.WIndex & 0x7F; idx < usb.NumberOfEndpoints && usbStallHandler[idx] != nil {
+				// Host has requested to stall an endpoint. If the request is addressed to
+				// an endpoint with a configured StallHandler, forward the message on.
+				// The 0x7F mask is used to clear the direction bit from the endpoint number
+				return usbStallHandler[idx](setup)
+			}
 			isEndpointHalt = true
 		}
 		SendZlp()
@@ -319,6 +332,9 @@ func ConfigureUSBEndpoint(desc descriptor.Descriptor, epSettings []usb.EndpointC
 			if ep.RxHandler != nil {
 				usbRxHandler[ep.Index] = ep.RxHandler
 			}
+		}
+		if ep.StallHandler != nil {
+			usbStallHandler[ep.Index] = ep.StallHandler
 		}
 	}
 
