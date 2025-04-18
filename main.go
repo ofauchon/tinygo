@@ -138,27 +138,13 @@ func printCommand(cmd string, args ...string) {
 }
 
 // Build compiles and links the given package and writes it to outpath.
-func Build(pkgName, outpath string, options *compileopts.Options) error {
-	config, err := builder.NewConfig(options)
-	if err != nil {
-		return err
-	}
-
-	if options.PrintJSON {
-		b, err := json.MarshalIndent(config, "", "  ")
-		if err != nil {
-			handleCompilerError(err)
-		}
-		fmt.Printf("%s\n", string(b))
-		return nil
-	}
-
+func Build(pkgName, outpath string, config *compileopts.Config) error {
 	// Create a temporary directory for intermediary files.
 	tmpdir, err := os.MkdirTemp("", "tinygo")
 	if err != nil {
 		return err
 	}
-	if !options.Work {
+	if !config.Options.Work {
 		defer os.RemoveAll(tmpdir)
 	}
 
@@ -1396,6 +1382,61 @@ func usage(command string) {
 
 }
 
+// Print diagnostics very similar to the -json flag in Go.
+func printBuildOutput(err error, jsonDiagnostics bool) {
+	if err == nil {
+		return // nothing to report
+	}
+
+	if jsonDiagnostics {
+		workingDir, getwdErr := os.Getwd()
+		if getwdErr != nil {
+			workingDir = ""
+		}
+
+		type jsonDiagnosticOutput struct {
+			ImportPath string
+			Action     string
+			Output     string `json:",omitempty"`
+		}
+
+		for _, diags := range diagnostics.CreateDiagnostics(err) {
+			if diags.ImportPath != "" {
+				output, _ := json.Marshal(jsonDiagnosticOutput{
+					ImportPath: diags.ImportPath,
+					Action:     "build-output",
+					Output:     "# " + diags.ImportPath + "\n",
+				})
+				os.Stdout.Write(output)
+				os.Stdout.Write([]byte{'\n'})
+			}
+			for _, diag := range diags.Diagnostics {
+				w := &bytes.Buffer{}
+				diag.WriteTo(w, workingDir)
+				output, _ := json.Marshal(jsonDiagnosticOutput{
+					ImportPath: diags.ImportPath,
+					Action:     "build-output",
+					Output:     w.String(),
+				})
+				os.Stdout.Write(output)
+				os.Stdout.Write([]byte{'\n'})
+			}
+
+			// Emit the "Action":"build-fail" JSON.
+			output, _ := json.Marshal(jsonDiagnosticOutput{
+				ImportPath: diags.ImportPath,
+				Action:     "build-fail",
+			})
+			os.Stdout.Write(output)
+			os.Stdout.Write([]byte{'\n'})
+		}
+		os.Exit(1)
+	}
+
+	// Regular diagnostic handling.
+	handleCompilerError(err)
+}
+
 func handleCompilerError(err error) {
 	if err != nil {
 		wd, getwdErr := os.Getwd()
@@ -1512,6 +1553,7 @@ func main() {
 	printStacks := flag.Bool("print-stacks", false, "print stack sizes of goroutines")
 	printAllocsString := flag.String("print-allocs", "", "regular expression of functions for which heap allocations should be printed")
 	printCommands := flag.Bool("x", false, "Print commands")
+	flagJSON := flag.Bool("json", false, "print output in JSON format")
 	parallelism := flag.Int("p", runtime.GOMAXPROCS(0), "the number of build jobs that can run in parallel")
 	nodebug := flag.Bool("no-debug", false, "strip debug information")
 	nobounds := flag.Bool("nobounds", false, "do not emit bounds checks")
@@ -1537,10 +1579,7 @@ func main() {
 	// development it can be useful to not emit debug information at all.
 	skipDwarf := flag.Bool("internal-nodwarf", false, "internal flag, use -no-debug instead")
 
-	var flagJSON, flagDeps, flagTest bool
-	if command == "help" || command == "list" || command == "info" || command == "build" {
-		flag.BoolVar(&flagJSON, "json", false, "print data in JSON format")
-	}
+	var flagDeps, flagTest bool
 	if command == "help" || command == "list" {
 		flag.BoolVar(&flagDeps, "deps", false, "supply -deps flag to go list")
 		flag.BoolVar(&flagTest, "test", false, "supply -test flag to go list")
@@ -1636,7 +1675,6 @@ func main() {
 		Programmer:      *programmer,
 		OpenOCDCommands: ocdCommands,
 		LLVMFeatures:    *llvmFeatures,
-		PrintJSON:       flagJSON,
 		Monitor:         *monitor,
 		BaudRate:        *baudrate,
 		Timeout:         *timeout,
@@ -1691,13 +1729,15 @@ func main() {
 			os.Exit(1)
 		}
 
-		err := Build(pkgName, outpath, options)
+		config, err := builder.NewConfig(options)
 		handleCompilerError(err)
+		err = Build(pkgName, outpath, config)
+		printBuildOutput(err, *flagJSON)
 	case "flash", "gdb", "lldb":
 		pkgName := filepath.ToSlash(flag.Arg(0))
 		if command == "flash" {
 			err := Flash(pkgName, *port, options)
-			handleCompilerError(err)
+			printBuildOutput(err, *flagJSON)
 		} else {
 			if !options.Debug {
 				fmt.Fprintln(os.Stderr, "Debug disabled while running debugger?")
@@ -1705,7 +1745,7 @@ func main() {
 				os.Exit(1)
 			}
 			err := Debug(command, pkgName, *ocdOutput, options)
-			handleCompilerError(err)
+			printBuildOutput(err, *flagJSON)
 		}
 	case "run":
 		if flag.NArg() < 1 {
@@ -1715,7 +1755,7 @@ func main() {
 		}
 		pkgName := filepath.ToSlash(flag.Arg(0))
 		err := Run(pkgName, options, flag.Args()[1:])
-		handleCompilerError(err)
+		printBuildOutput(err, *flagJSON)
 	case "test":
 		var pkgNames []string
 		for i := 0; i < flag.NArg(); i++ {
@@ -1849,7 +1889,7 @@ func main() {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
-		if flagJSON {
+		if *flagJSON {
 			json, _ := json.MarshalIndent(struct {
 				Target     *compileopts.TargetSpec `json:"target"`
 				GOROOT     string                  `json:"goroot"`
@@ -1891,7 +1931,7 @@ func main() {
 			os.Exit(1)
 		}
 		var extraArgs []string
-		if flagJSON {
+		if *flagJSON {
 			extraArgs = append(extraArgs, "-json")
 		}
 		if flagDeps {

@@ -53,7 +53,6 @@ type Options struct {
 	Programmer      string
 	OpenOCDCommands []string
 	LLVMFeatures    string
-	PrintJSON       bool
 	Monitor         bool
 	BaudRate        int
 	Timeout         time.Duration

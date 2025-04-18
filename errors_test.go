@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/tinygo-org/tinygo/builder"
 	"github.com/tinygo-org/tinygo/compileopts"
 	"github.com/tinygo-org/tinygo/diagnostics"
 )
@@ -64,7 +65,11 @@ func testErrorMessages(t *testing.T, filename string, options *compileopts.Optio
 
 	// Try to build a binary (this should fail with an error).
 	tmpdir := t.TempDir()
-	err := Build(filename, tmpdir+"/out", options)
+	config, err := builder.NewConfig(options)
+	if err != nil {
+		t.Fatal("expected to get a compiler error")
+	}
+	err = Build(filename, tmpdir+"/out", config)
 	if err == nil {
 		t.Fatal("expected to get a compiler error")
 	}
