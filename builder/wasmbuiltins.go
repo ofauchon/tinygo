@@ -29,6 +29,8 @@ var libWasmBuiltins = Library{
 			"-Wall",
 			"-std=gnu11",
 			"-nostdlibinc",
+			"-mnontrapping-fptoint", // match wasm-unknown (default on in LLVM 20)
+			"-mno-bulk-memory",      // same here
 			"-isystem", libcDir + "/libc-top-half/musl/arch/wasm32",
 			"-isystem", libcDir + "/libc-top-half/musl/arch/generic",
 			"-isystem", libcDir + "/libc-top-half/musl/src/internal",
