@@ -108,7 +108,7 @@ jobs:
       - image: golang:1.26-bookworm
     steps:
       - test-linux:
-          llvm: "20"
+          llvm: "21"
     resource_class: large
 
 workflows:
